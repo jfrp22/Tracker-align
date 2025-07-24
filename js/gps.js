@@ -9,8 +9,8 @@ const availableBrokers = [
         name: "EMQX Público"
     },
     {
-        url: "ws://localhost:9001",
-        name: "Broker Local"
+        url: "wss://broker.hivemq.com:8884/mqtt",
+        name: "Hivemq Público"
     }
 ];
 
