@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/contact.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-envelope"></i> Contacto</h1>
+        </header>
+        
+        <nav>
+            <a href="main.html"><i class="fas fa-home"></i> Inicio</a>
+            <a href="gps.html"><i class="fas fa-map-marked-alt"></i> Tracker GPS</a>
+            <a href="config.html"><i class="fas fa-network-wired"></i> Configuración</a>
+            <a href="control.html"><i class="fas fa-cog"></i> CMA</a>
+            <a href="about.html"><i class="fas fa-info-circle"></i> Acerca de</a>
+            <a href="contact.html" class="active"><i class="fas fa-envelope"></i> Contacto</a>
+        </nav>
+        
+        <div class="about-card">
+            <form class="contact-form" action="https://formsubmit.co/esp8266tg@gmail.com" method="POST">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_next" value="https://jfrp22.github.io/Tracker/gracias.html">
+                
+                <h2><i class="fas fa-paper-plane"></i> Contacto</h2>
+                
+                <div class="form-group">
+                    <input type="text" class="form-control" name="name" placeholder="Nombre" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-control" name="email" placeholder="Correo electrónico" required>
+                </div>
+                <div class="form-group">
+                    <textarea class="form-control" name="message" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                </div>
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                </button>
+            </form>
+        </div>
+        
+        <footer>
+            <p>© 2025 Tracker | Versión 1.0</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Nodos IoT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/config.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-microchip"></i> Control de Nodos IoT</h1>
+        </header>
+        <nav>
+            <a href="main.html"><i class="fas fa-home"></i> Inicio</a>
+            <a href="gps.html"><i class="fas fas fa-map-marked-alt"></i> Tracker GPS</a>
+            <a href="config.html" class="active"><i class="fas fa-network-wired"></i> Configuración</a>
+            <a href="control.html"><i class="fas fa-cog"></i> CMA</a>
+            <a href="about.html"><i class="fas fa-info-circle"></i> Acerca de</a>
+            <a href="contact.html"><i class="fas fa-envelope"></i> Contacto</a>
+        </nav>
+        <div id="connection-status" class="status-indicator connecting">
+            <i class="fas fa-plug"></i> Conectando al servidor MQTT...
+        </div>
+        
+        <div class="table-container">
+            <table id="nodes-table">
+                <thead>
+                    <tr>
+                        <th>ID del Nodo</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Emparejado con</th>
+                        <th>Dirección IP</th>
+                        <th>Última Actualización</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="nodes-body">
+                    <!-- Los nodos se agregarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Modal de Configuración -->
+    <div id="config-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Configurar Nodo</h3>
+                <button class="btn btn-secondary" onclick="hideModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="node-role">Rol del Nodo:</label>
+                    <select id="node-role" class="form-control" onchange="updatePairingOptions()">
+                        <option value="UNCONFIGURED">Sin configurar</option>
+                        <option value="MASTER">Maestro</option>
+                        <option value="SLAVE">Esclavo</option>
+                    </select>
+                </div>
+                <div class="form-group" id="pairing-group" style="display: none;">
+                    <label for="pair-device">Emparejar con Maestro:</label>
+                    <select id="pair-device" class="form-control">
+                        <!-- Las opciones se llenarán dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveNodeConfig()">Guardar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+    <script src="js/ajustes.js"></script>
+    <script src="js/config.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+title: Tu Sitio
+theme: jekyll-theme-minimal
+permalink: pretty
+defaults:
+  - scope:
+      path: ""
+    values:
+      redirect_from: "/index.html"
+      redirect_to: "/login.html"
