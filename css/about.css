@@ -1,0 +1,163 @@
+/* ==============================================
+ESTILOS ESPECÍFICOS PARA ABOUT PAGE
+============================================== */
+
+/* TARJETA ACERCA DE */
+.about-card {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-5);
+    transition: all var(--transition-normal) ease;
+}
+
+.subtitle {
+    color: var(--gray-600);
+    font-size: var(--text-lg);
+    text-align: center;
+    margin-bottom: var(--space-4);
+}
+
+/* SECCIONES */
+section {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+}
+
+section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+section h2 {
+    color: var(--primary-600);
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+/* CARACTERÍSTICAS */
+.feature {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: var(--space-5);
+    transition: all var(--transition-fast) ease;
+}
+
+.feature:hover {
+    transform: translateY(-2px);
+}
+
+.feature:last-child {
+    margin-bottom: 0;
+}
+
+.feature-icon {
+    font-size: var(--text-2xl);
+    color: var(--color-primary);
+    margin-right: var(--space-4);
+    flex-shrink: 0;
+    padding-top: var(--space-1);
+    transition: all var(--transition-normal) ease;
+}
+
+.feature-text h3 {
+    color: var(--secondary-500);
+    margin-bottom: var(--space-2);
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.feature-text h4 {
+    color: var(--primary-500);
+    margin: var(--space-3) 0 var(--space-2);
+    font-size: var(--text-base);
+    font-weight: 600;
+}
+
+.feature-text p, 
+.feature-text li {
+    color: var(--color-text);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    margin-bottom: var(--space-2);
+}
+
+.feature-text ul, 
+.feature-text ol {
+    margin-left: var(--space-5);
+    margin-bottom: var(--space-3);
+}
+
+.feature-text ul ul,
+.feature-text ol ol {
+    margin-left: var(--space-4);
+}
+
+.feature-text pre {
+    background-color: var(--gray-800);
+    color: var(--gray-100);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    margin: var(--space-3) 0;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    margin-top: var(--space-6);
+    color: var(--gray-600);
+    font-size: var(--text-sm);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+/* ==============================================
+MEDIA QUERIES
+============================================== */
+@media (max-width: 48em) {
+    .about-card {
+        padding: var(--space-4);
+    }
+    
+    .feature {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .feature-icon {
+        margin-right: 0;
+        margin-bottom: var(--space-3);
+    }
+    
+    section h2 {
+        font-size: var(--text-lg);
+    }
+}
+
+@media (max-width: 30em) {
+    .about-card {
+        padding: var(--space-3);
+    }
+    
+    .feature-text h3 {
+        font-size: var(--text-base);
+    }
+    
+    .feature-text p,
+    .feature-text li {
+        font-size: var(--text-sm);
+    }
+    
+    .subtitle {
+        font-size: var(--text-base);
+    }
+}

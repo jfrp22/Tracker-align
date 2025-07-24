@@ -1,0 +1,344 @@
+/* ==============================================
+RESET MEJORADO Y BASE
+============================================== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* ==============================================
+    VARIABLES DEL SISTEMA DE DISEÑO
+    ============================================== */
+    /* Colores primarios */
+    --primary-50: #e8eaf6;
+    --primary-100: #c5cae9;
+    --primary-200: #9fa8da;
+    --primary-300: #7986cb;
+    --primary-400: #5c6bc0;
+    --primary-500: #4361ee;
+    --primary-600: #3949ab;
+    --primary-700: #303f9f;
+    --primary-800: #283593;
+    --primary-900: #1a237e;
+    
+    /* Colores secundarios */
+    --secondary-50: #e8eaf6;
+    --secondary-100: #c5cbe3;
+    --secondary-200: #a2a9d0;
+    --secondary-300: #7f87bd;
+    --secondary-400: #5c65aa;
+    --secondary-500: #3f37c9;
+    --secondary-600: #3830b5;
+    --secondary-700: #3129a1;
+    --secondary-800: #2a228d;
+    --secondary-900: #231b79;
+    
+    /* Escala de grises */
+    --white: #ffffff;
+    --gray-50: #f8f9fa;
+    --gray-100: #f1f3f5;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+    --black: #000000;
+    
+    /* Sombras */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Tipografía */
+    --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --text-sm: 0.875rem;  /* 14px */
+    --text-base: 1rem;    /* 16px */
+    --text-lg: 1.125rem;  /* 18px */
+    --text-xl: 1.25rem;   /* 20px */
+    --text-2xl: 1.5rem;   /* 24px */
+    
+    /* Espaciado */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    
+    /* Bordes */
+    --radius-sm: 0.125rem; /* 2px */
+    --radius: 0.25rem;     /* 4px */
+    --radius-md: 0.375rem; /* 6px */
+    --radius-lg: 0.5rem;   /* 8px */
+    
+    /* Transiciones */
+    --transition-fast: 150ms;
+    --transition-normal: 250ms;
+    
+    /* Variables para modo oscuro */
+    --color-bg: var(--white);
+    --color-text: var(--gray-900);
+    --color-border: var(--gray-200);
+    --color-card: var(--white);
+    --color-primary: var(--primary-500);
+    --color-primary-hover: var(--primary-600);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-bg: var(--gray-500);
+        --color-text: var(--gray-900);
+        --color-border: var(--gray-900);
+        --color-card: var(--gray-600);
+        --color-primary: var(--primary-500);
+        --color-primary-hover: var(--primary-300);
+    }
+}
+
+/* ==============================================
+BASE STYLES
+============================================== */
+html {
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    padding: var(--space-5);
+    min-height: 100vh;
+    transition: background-color var(--transition-normal) ease;
+}
+
+/* ==============================================
+COMPONENTES
+============================================== */
+.container {
+    max-width: 50rem; /* 800px */
+    margin: 0 auto;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
+
+h1 {
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+}
+
+/* NAVEGACIÓN */
+nav {
+    background: var(--color-primary);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-5);
+    margin-bottom: var(--space-6);
+    transition: all var(--transition-normal) ease;
+}
+
+nav a {
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast) ease;
+    font-size: var(--text-sm);
+}
+
+nav a:hover, nav a.active {
+    background: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+nav a i {
+    font-size: var(--text-base);
+}
+
+/* TARJETA DE CONTACTO */
+.contact-card {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-6);
+    border: 1px solid var(--color-border);
+    transition: all var(--transition-normal) ease;
+}
+
+.contact-form {
+    width: 100%;
+}
+
+.contact-form h2 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-xl);
+}
+
+/* FORMULARIO */
+.form-group {
+    margin-bottom: var(--space-4);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: var(--space-3) var(--space-4); /* 12px 16px */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: var(--text-base);
+    background-color: var(--color-card);
+    color: var(--color-text);
+    transition: all var(--transition-fast) ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.form-group textarea {
+    min-height: 9.375rem; /* 150px */
+    resize: vertical;
+}
+/* Placeholder styling */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--gray-500);
+    opacity: 1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-1);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: var(--text-base);
+    transition: all var(--transition-fast) ease;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+textarea.form-control {
+    min-height: 9.375rem; /* 150px */
+    resize: vertical;
+}
+
+/* BOTONES */
+.btn {
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-size: var(--text-base);
+    font-weight: 500;
+    transition: all var(--transition-fast) ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.btn:focus {
+    outline: 2px solid var(--primary-300);
+    outline-offset: 2px;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    margin-top: var(--space-8);
+    color: var(--gray-600);
+    font-size: var(--text-sm);
+}
+
+/* ==============================================
+MEDIA QUERIES
+============================================== */
+@media (max-width: 48em) { /* 768px */
+    .container {
+        padding: 0;
+    }
+    
+    .contact-card {
+        padding: var(--space-4);
+    }
+}
+
+@media (max-width: 30em) { /* 480px */
+    nav {
+        gap: var(--space-2);
+        padding: var(--space-3);
+    }
+    
+    nav a {
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--text-xs);
+    }
+    
+    .form-control {
+        padding: var(--space-2);
+    }
+    
+    .btn {
+        padding: var(--space-2) var(--space-4);
+    }
+}

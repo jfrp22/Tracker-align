@@ -1,0 +1,364 @@
+/* ==============================================
+RESET MEJORADO Y BASE
+============================================== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* ==============================================
+    VARIABLES DEL SISTEMA DE DISEÑO
+    ============================================== */
+    /* Colores GPS específicos */
+    --gps-primary: #4361ee;
+    --gps-primary-hover: #3a56d4;
+    --gps-secondary: #3f37c9;
+    --gps-success: #4cc9f0;
+    --gps-danger: #f72585;
+    --gps-warning: #f8961e;
+    
+    /* Escala de grises */
+    --white: #ffffff;
+    --gray-50: #f8f9fa;
+    --gray-100: #f1f3f5;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+    --black: #000000;
+    
+    /* Sombras */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Tipografía */
+    --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --text-xs: 0.75rem;    /* 12px */
+    --text-sm: 0.875rem;  /* 14px */
+    --text-base: 1rem;    /* 16px */
+    --text-lg: 1.125rem;  /* 18px */
+    --text-xl: 1.25rem;   /* 20px */
+    --text-2xl: 1.5rem;   /* 24px */
+    
+    /* Espaciado */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;  /* 40px */
+    
+    /* Bordes */
+    --radius-sm: 0.125rem; /* 2px */
+    --radius: 0.25rem;     /* 4px */
+    --radius-md: 0.375rem; /* 6px */
+    --radius-lg: 0.5rem;   /* 8px */
+    --radius-xl: 0.75rem; /* 12px */
+    --radius-full: 9999px;
+    
+    /* Transiciones */
+    --transition-fast: 150ms;
+    --transition-normal: 250ms;
+    --transition-slow: 400ms;
+    --transition-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    
+    /* Breakpoints basados en em para mejor zoom */
+    --screen-sm: 40em;    /* 640px */
+    --screen-md: 48em;    /* 768px */
+    --screen-lg: 64em;   /* 1024px */
+    
+    /* Variables para modo oscuro */
+    --color-bg: var(--white);
+    --color-text: var(--gray-900);
+    --color-border: var(--gray-200);
+    --color-card: var(--white);
+    --color-primary: var(--gps-primary);
+    --color-primary-hover: var(--gps-primary-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-bg: var(--gray-500);
+        --color-text: var(--gray-900);
+        --color-border: var(--gray-700);
+        --color-card: var(--gray-500);
+        --color-primary: var(--gps-primary);
+        --color-primary-hover: var(--gps-primary-hover);
+    }
+}
+
+/* ==============================================
+BASE STYLES
+============================================== */
+html {
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    padding: var(--space-5);
+    min-height: 100vh;
+    transition: background-color var(--transition-normal) ease;
+}
+
+/* ==============================================
+COMPONENTES GPS
+============================================== */
+.container {
+    width: 100%;
+    max-width: 62.5rem; /* 1000px */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* NAVEGACIÓN */
+nav {
+    background: var(--color-primary);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-5);
+    transition: all var(--transition-normal) ease;
+}
+
+nav a {
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast) ease;
+    font-size: var(--text-sm);
+}
+
+nav a:hover, nav a.active {
+    background: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+nav a i {
+    font-size: var(--text-base);
+}
+
+/* CONTENIDO PRINCIPAL */
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    background-color: var(--color-card);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal) ease;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    margin-bottom: var(--space-4);
+}
+
+h1 {
+    color: var(--color-primary);
+    margin-bottom: var(--space-3);
+    font-size: clamp(var(--text-xl), 5vw, var(--text-2xl));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    font-weight: 600;
+}
+
+/* MAPA */
+#map {
+    height: 75vh;
+    min-height: 25rem; /* 400px */
+    width: 100%;
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-1);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    transition: all var(--transition-normal) ease;
+}
+
+/* ESTADO DE CONEXIÓN */
+#connection-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    margin-top: var(--space-1);
+    background-color: var(--gray-50);
+    border: 1px solid var(--color-border);
+    transition: all var(--transition-normal) ease;
+}
+
+.connected {
+    background-color: var(--gps-success) !important;
+    color: var(--white) !important;
+    border-color: var(--gps-success) !important;
+}
+
+.disconnected {
+    background-color: var(--gps-danger) !important;
+    color: var(--white) !important;
+    border-color: var(--gps-danger) !important;
+}
+
+.reconnecting {
+    background-color: var(--gps-warning) !important;
+    color: var(--white) !important;
+    border-color: var(--gps-warning) !important;
+}
+
+/* CONTROLES DE DISPOSITIVO */
+.device-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: center;
+    margin-bottom: var(--space-3);
+}
+
+.device-btn {
+    background: var(--color-primary);
+    color: var(--white);
+    border: none;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition-fast) ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.device-btn:hover {
+    background: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.device-btn:focus {
+    outline: 2px solid var(--gps-primary);
+    outline-offset: 2px;
+}
+
+.device-btn.active {
+    background: var(--gps-secondary);
+    box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--gps-secondary);
+}
+
+.device-btn i {
+    font-size: var(--text-sm);
+}
+
+/* MARCADORES PERSONALIZADOS */
+.custom-icon {
+    background: transparent;
+    border: none;
+}
+
+.device-marker {
+    width: 1.875rem; /* 30px */
+    height: 1.875rem; /* 30px */
+    border-radius: 50% 50% 50% 0;
+    background: var(--gps-primary);
+    transform: rotate(-45deg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--white);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast) ease;
+}
+
+.device-marker i {
+    transform: rotate(45deg);
+    font-size: 0.875rem; /* 14px */
+    margin-top: 0.125rem; /* 2px */
+    margin-right: 0.125rem; /* 2px */
+}
+
+.leaflet-popup-content {
+    margin: var(--space-3) var(--space-4) !important;
+    font-size: var(--text-sm) !important;
+    color: var(--gray-900) !important;
+}
+
+/* ==============================================
+MEDIA QUERIES
+============================================== */
+@media (max-width: 48em) { /* 768px */
+    body {
+        padding: var(--space-4);
+    }
+    
+    .content {
+        padding: var(--space-4);
+    }
+    
+    #map {
+        height: 65vh;
+    }
+    
+    .device-controls {
+        gap: var(--space-2);
+    }
+}
+
+@media (max-width: 30em) { /* 480px */
+    nav {
+        gap: var(--space-1);
+        padding: var(--space-3);
+    }
+    
+    nav a {
+        padding: var(--space-1) var(--space-2);
+        font-size: var(--text-xs);
+    }
+    
+    #map {
+        height: 55vh;
+        min-height: 18.75rem; /* 300px */
+    }
+    
+    .device-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .device-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
