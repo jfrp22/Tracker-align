@@ -175,19 +175,33 @@ function connectToBroker(index) {
             
             if (topic === mqttTopics.pairingResponse) {
                 if (data.status === "PAIRED") {
-                    updateDevice({
-                        mac: data.slave_mac,
-                        paired_with: data.master_mac,
-                        status: "active"
-                    });
-                    updateDevice({
-                        mac: data.master_mac,
-                        paired_with: data.slave_mac,
-                        status: "active"
-                    });
-                    alert(`Emparejamiento exitoso: ${data.slave_mac} → ${data.master_mac}`);
-                }
-            }
+                    // Verificar si el maestro ya tiene un esclavo emparejado
+                    if (devices[data.master_mac]?.paired_with) {
+                        // Enviar mensaje de rechazo
+                        const rejectMsg = {
+                            master_mac: data.master_mac,
+                            slave_mac: data.slave_mac,
+                            status: "REJECTED",
+                            reason: "Master already has a paired slave"
+                        };
+                        client.publish(mqttTopics.pairingResponse, JSON.stringify(rejectMsg), { qos: 1 });
+                        alert(`El maestro ${data.master_mac} ya tiene un esclavo emparejado`);
+                        return;
+                    }
+        // Actualizar ambos dispositivos
+        updateDevice({
+            mac: data.slave_mac,
+            paired_with: data.master_mac,
+            status: "active"
+        });
+        updateDevice({
+            mac: data.master_mac,
+            paired_with: data.slave_mac,
+            status: "active"
+        });
+        alert(`Emparejamiento exitoso: ${data.slave_mac} → ${data.master_mac}`);
+    }
+}
 
             if (topic === mqttTopics.unpairRequest) {
                 handleUnpairRequest(message.toString());
@@ -307,35 +321,25 @@ function updateTable() {
     });
     
     // Generar filas de la tabla
-    sortedDevices.forEach(([mac, device]) => {
-        const row = document.createElement('tr');
-        
-        row.innerHTML = `
-            <td>${mac}</td>
-            <td><span class="badge ${device.role === 'MASTER' ? 'badge-master' : 
-                                  device.role === 'SLAVE' ? 'badge-slave' : 'badge-unconfigured'}">
-                ${device.role}
-            </span></td>
-            <td><span class="badge ${device.status === 'active' ? 'badge-online' : 'badge-offline'}">
-                ${device.status === 'active' ? 'Online' : 'Offline'}
-            </span></td>
-            <td>${device.paired_with || 'Ninguno'}</td>
-            <td>${device.ip}</td>
-            <td>${device.lastSeen.toLocaleTimeString()}</td>
-            <td>
-                <button class="btn btn-primary btn-sm" onclick="showConfigModal('${mac}')">
-                    <i class="fas fa-cog"></i> Configurar
-                </button>
-                ${device.paired_with ? `
-                <button class="btn btn-danger btn-sm" onclick="requestUnpair('${mac}')" style="margin-left: 5px;">
-                    <i class="fas fa-unlink"></i> Desemparejar
-                </button>
-                ` : ''}
-            </td>
-        `;
-        
-        nodesBody.appendChild(row);
-    });
+// En la función updateTable()
+sortedDevices.forEach(([mac, device]) => {
+    const row = document.createElement('tr');
+    
+    // Mostrar advertencia si el maestro ya tiene esclavo
+    const pairingWarning = device.role === 'MASTER' && device.paired_with ? 
+        `<small style="color: var(--warning);">(Ya emparejado con ${device.paired_with})</small>` : '';
+    
+    row.innerHTML = `
+        <td>${mac}</td>
+        <td><span class="badge ${device.role === 'MASTER' ? 'badge-master' : 
+                              device.role === 'SLAVE' ? 'badge-slave' : 'badge-unconfigured'}">
+            ${device.role} ${pairingWarning}
+        </span></td>
+        <!-- resto de las columnas -->
+    `;
+    
+    nodesBody.appendChild(row);
+});
 }
 
 // Mostrar modal de configuración
@@ -364,15 +368,15 @@ function updatePairingOptions() {
     pairDeviceSelect.innerHTML = '';
     pairingGroup.style.display = 'none';
     
-    // Solo mostrar opciones de emparejamiento para esclavos
     if (selectedRole === 'SLAVE') {
         pairingGroup.style.display = 'block';
         
-        // Obtener maestros disponibles
+        // Obtener maestros disponibles (que no tengan esclavos)
         const availableMasters = Object.entries(devices)
             .filter(([mac, device]) => 
                 device.role === 'MASTER' && 
                 device.status === 'active' &&
+                !device.paired_with && // Solo maestros sin esclavos
                 mac !== currentEditingNode
             )
             .map(([mac]) => mac);
@@ -384,15 +388,10 @@ function updatePairingOptions() {
                 option.textContent = mac;
                 pairDeviceSelect.appendChild(option);
             });
-            
-            // Seleccionar maestro actual si existe
-            if (devices[currentEditingNode]?.paired_with) {
-                pairDeviceSelect.value = devices[currentEditingNode].paired_with;
-            }
         } else {
             const option = document.createElement('option');
             option.value = '';
-            option.textContent = 'No hay maestros disponibles';
+            option.textContent = 'No hay maestros disponibles (todos están emparejados)';
             option.disabled = true;
             pairDeviceSelect.appendChild(option);
         }
