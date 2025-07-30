@@ -22,6 +22,7 @@ let currentBrokerIndex = 0;
 let client = null;
 let brokerSwitchTimeout = null;
 let autoReconnectEnabled = true;
+let userInteractedWithMap = false;
 
 // Tópicos MQTT
 const gpsTopic = "iotlab/gps/data";
@@ -42,6 +43,15 @@ function initMap() {
     
     // Añadir control de escala
     L.control.scale({ imperial: false }).addTo(map);
+    
+    // Detectar interacción del usuario con el mapa
+    map.on('dragstart', () => {
+        userInteractedWithMap = true;
+    });
+    
+    map.on('zoomstart', () => {
+        userInteractedWithMap = true;
+    });
 }
 
 // Conectar al broker MQTT
@@ -270,6 +280,13 @@ function updateDeviceMarker(mac, data) {
             <p><b>Satélites:</b> ${data.sats}</p>
         </div>
     `);
+    // Solo hacer auto-enfoque si no ha habido interacción del usuario
+    if (!userInteractedWithMap) {
+        // Si es el primer dispositivo o el dispositivo activo, enfocarlo
+        if (Object.keys(devices).length === 1 || mac === activeDevice) {
+            focusDevice(mac);
+        }
+    }
     
     // Si es el primer dispositivo o el dispositivo activo, enfocarlo
     if (Object.keys(devices).length === 1 || mac === activeDevice) {
