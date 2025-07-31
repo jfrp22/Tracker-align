@@ -366,6 +366,27 @@ tr:hover {
     color: var(--white);
 }
 
+/* Estilo para indicar emparejamiento no permitido */
+.badge-pairing-error {
+    background-color: var(--danger);
+    color: var(--white);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Mensaje de error en el modal */
+.pairing-error-message {
+    color: var(--danger);
+    font-size: var(--text-sm);
+    margin-top: var(--space-2);
+    display: none;
+}
+
 /* BOTONES */
 .btn {
     padding: var(--space-2) var(--space-3);
