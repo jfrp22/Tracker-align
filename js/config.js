@@ -364,16 +364,16 @@ function updatePairingOptions() {
     pairDeviceSelect.innerHTML = '';
     pairingGroup.style.display = 'none';
     
-    // Solo mostrar opciones de emparejamiento para esclavos
     if (selectedRole === 'SLAVE') {
         pairingGroup.style.display = 'block';
         
-        // Obtener maestros disponibles
+        // Obtener maestros disponibles que no tengan ya este esclavo emparejado
         const availableMasters = Object.entries(devices)
             .filter(([mac, device]) => 
                 device.role === 'MASTER' && 
                 device.status === 'active' &&
-                mac !== currentEditingNode
+                mac !== currentEditingNode &&
+                !device.paired_with.includes(currentEditingNode)
             )
             .map(([mac]) => mac);
         
@@ -405,6 +405,12 @@ function saveNodeConfig() {
     
     const role = nodeRoleSelect.value;
     const pairWith = role === 'SLAVE' && pairDeviceSelect.value ? pairDeviceSelect.value : '';
+    
+    // Validar que no se empareje con múltiples maestros
+    if (role === 'SLAVE' && pairWith.includes(',')) {
+        alert("Error: Un esclavo solo puede estar emparejado con un maestro");
+        return;
+    }
     
     const config = {
         target: currentEditingNode,
