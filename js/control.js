@@ -1,4 +1,4 @@
-// Lista de brokers disponibles (usando la misma del GPS)
+// Lista de brokers disponibles
 const availableBrokers = [
     {
         url: "wss://test.mosquitto.org:8081/mqtt",
@@ -19,10 +19,13 @@ let client = null;
 let currentBrokerIndex = 0;
 let autoReconnectEnabled = true;
 let brokerSwitchTimeout = null;
+let currentDeviceMac = null;
+const devices = {}; // Almacena dispositivos pan-tilt disponibles
 
 // Tópicos MQTT
-const controlTopic = "iotlab/pan-tilt/control";
-const statusTopic = "iotlab/pan-tilt/status";
+const controlTopicPrefix = "iotlab/pan-tilt/";
+const statusTopicPrefix = "iotlab/pan-tilt/";
+const discoveryTopic = "iotlab/devices/pan-tilt";
 
 // Elementos del DOM
 const connStatus = document.getElementById("connection-status");
@@ -30,13 +33,15 @@ const panValue = document.querySelector('.axis-group:nth-child(1) .axis-value');
 const tiltValue = document.querySelector('.axis-group:nth-child(2) .axis-value');
 const speedValue = document.querySelector('.speed-value');
 const speedSlider = document.querySelector('.speed-slider');
+const deviceSelect = document.getElementById("device-select");
+const brokerSelect = document.getElementById("broker-select");
 
 // Valores actuales
-let currentPan = 0; // -90 a +90 grados
-let currentTilt = 0; // -30 a +45 grados
-let currentSpeed = 50; // 1-100%
+let currentPan = 0;
+let currentTilt = 0;
+let currentSpeed = 50;
 
-// Conectar al broker MQTT (similar al GPS pero simplificado)
+// Conectar al broker MQTT
 function connectToBroker(index) {
     if (client) {
         client.end();
@@ -46,6 +51,7 @@ function connectToBroker(index) {
     const broker = availableBrokers[currentBrokerIndex];
     
     updateConnectionStatus('reconnecting', `Conectando a ${broker.name}...`);
+    updateDeviceList([]); // Limpiar lista de dispositivos
     
     const options = {
         keepalive: 60,
@@ -61,8 +67,11 @@ function connectToBroker(index) {
         console.log(`Conectado al broker ${broker.name}`);
         updateConnectionStatus('connected', `Conectado a ${broker.name}`);
         
-        // Suscribirse al topic de estado
-        client.subscribe(statusTopic, { qos: 1 });
+        // Suscribirse a topics
+        client.subscribe(discoveryTopic, { qos: 1 });
+        if (currentDeviceMac) {
+            subscribeToDevice(currentDeviceMac);
+        }
         
         if (brokerSwitchTimeout) {
             clearTimeout(brokerSwitchTimeout);
@@ -88,48 +97,149 @@ function connectToBroker(index) {
     });
     
     client.on('message', (topic, message) => {
-        if (topic === statusTopic) {
-            try {
-                const data = JSON.parse(message.toString());
-                console.log("Estado recibido:", data);
-                
-                // Actualizar UI con los valores actuales del dispositivo
-                if (data.pan !== undefined) {
-                    currentPan = data.pan;
-                    panValue.textContent = `${currentPan}°`;
-                }
-                
-                if (data.tilt !== undefined) {
-                    currentTilt = data.tilt;
-                    tiltValue.textContent = `${currentTilt}°`;
-                }
-                
-                if (data.speed !== undefined) {
-                    currentSpeed = data.speed;
-                    speedSlider.value = currentSpeed;
-                    speedValue.textContent = `${currentSpeed}%`;
-                }
-                
-            } catch (e) {
-                console.error("Error al procesar mensaje de estado:", e);
+        try {
+            const data = JSON.parse(message.toString());
+            
+            if (topic === discoveryTopic) {
+                // Mensaje de descubrimiento de dispositivos
+                handleDeviceDiscovery(data);
+            } else if (topic.startsWith(statusTopicPrefix)) {
+                // Mensaje de estado de un dispositivo
+                handleStatusMessage(topic, data);
             }
+        } catch (e) {
+            console.error("Error al procesar mensaje:", e);
         }
     });
 }
 
-// Intentar conectar al siguiente broker
-function tryNextBroker() {
-    if (!autoReconnectEnabled || brokerSwitchTimeout) return;
+// Manejar descubrimiento de dispositivos
+function handleDeviceDiscovery(data) {
+    const mac = data.mac;
+    if (!mac) return;
     
-    brokerSwitchTimeout = setTimeout(() => {
-        const nextIndex = (currentBrokerIndex + 1) % availableBrokers.length;
-        console.log(`Intentando conectar al siguiente broker: ${availableBrokers[nextIndex].name}`);
-        connectToBroker(nextIndex);
-        brokerSwitchTimeout = null;
-    }, 5000);
+    // Registrar/actualizar dispositivo
+    devices[mac] = {
+        name: data.name || `Pan-Tilt ${mac.substring(0, 6)}`,
+        lastSeen: new Date(),
+        broker: availableBrokers[currentBrokerIndex].name
+    };
+    
+    // Actualizar lista de dispositivos en UI
+    updateDeviceList(Object.values(devices));
+    
+    // Auto-seleccionar si es el único dispositivo
+    if (Object.keys(devices).length === 1) {
+        selectDevice(mac);
+    }
 }
 
-// Cambiar manualmente de broker
+// Manejar mensajes de estado
+function handleStatusMessage(topic, data) {
+    const mac = topic.split('/')[2]; // Extraer MAC del topic
+    if (mac !== currentDeviceMac) return;
+    
+    console.log("Estado recibido de", mac, ":", data);
+    
+    // Actualizar UI con los valores del dispositivo
+    if (data.pan !== undefined) {
+        currentPan = data.pan;
+        panValue.textContent = `${currentPan}°`;
+    }
+    
+    if (data.tilt !== undefined) {
+        currentTilt = data.tilt;
+        tiltValue.textContent = `${currentTilt}°`;
+    }
+    
+    if (data.speed !== undefined) {
+        currentSpeed = data.speed;
+        speedSlider.value = currentSpeed;
+        speedValue.textContent = `${currentSpeed}%`;
+    }
+}
+
+// Suscribirse a los topics de un dispositivo específico
+function subscribeToDevice(mac) {
+    if (!client || !client.connected) return;
+    
+    const statusTopic = `${statusTopicPrefix}${mac}/status`;
+    client.subscribe(statusTopic, { qos: 1 }, (err) => {
+        if (err) {
+            console.error("Error al suscribirse a", statusTopic, ":", err);
+        } else {
+            console.log("Suscrito a", statusTopic);
+        }
+    });
+}
+
+// Seleccionar un dispositivo
+function selectDevice(mac) {
+    if (!devices[mac]) return;
+    
+    currentDeviceMac = mac;
+    
+    // Actualizar UI
+    deviceSelect.value = mac;
+    
+    // Suscribirse a los topics del dispositivo
+    if (client && client.connected) {
+        subscribeToDevice(mac);
+    }
+    
+    // Solicitar estado actual
+    sendCommand('get_status');
+}
+
+// Enviar comando al dispositivo actual
+function sendCommand(command, data = {}) {
+    if (!client || !client.connected || !currentDeviceMac) {
+        alert("No hay conexión activa o dispositivo seleccionado");
+        return;
+    }
+    
+    const topic = `${controlTopicPrefix}${currentDeviceMac}/control`;
+    const message = {
+        ...data,
+        command: command,
+        timestamp: new Date().toISOString()
+    };
+    
+    client.publish(topic, JSON.stringify(message), { qos: 1 }, (err) => {
+        if (err) {
+            console.error("Error al enviar comando:", err);
+        } else {
+            console.log("Comando enviado a", currentDeviceMac, ":", message);
+        }
+    });
+}
+
+// Actualizar lista de dispositivos en el selector
+function updateDeviceList(deviceList) {
+    deviceSelect.innerHTML = '<option value="">Seleccione un dispositivo</option>';
+    
+    deviceList.forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.mac;
+        option.textContent = `${device.name} (${device.mac}) - ${device.broker}`;
+        deviceSelect.appendChild(option);
+    });
+}
+
+// Actualizar estado de conexión en la UI
+function updateConnectionStatus(status, text) {
+    connStatus.className = status;
+    connStatus.innerHTML = `<i class="fas fa-plug"></i> ${text}`;
+    
+    // Actualizar selector de brokers
+    brokerSelect.innerHTML = availableBrokers.map((broker, index) => `
+        <option value="${index}" ${index === currentBrokerIndex ? 'selected' : ''}>
+            ${broker.name}
+        </option>
+    `).join('');
+}
+
+// Cambiar de broker manualmente
 function switchBroker(index) {
     if (index >= 0 && index < availableBrokers.length) {
         autoReconnectEnabled = false;
@@ -141,94 +251,39 @@ function switchBroker(index) {
     }
 }
 
-// Actualizar estado de conexión en la UI
-function updateConnectionStatus(status, text) {
-    connStatus.className = status;
-    
-    let statusHTML = `<i class="fas fa-plug"></i> ${text}`;
-    
-    if (status === 'connected') {
-        statusHTML += `
-            <div style="display: inline-block; margin-left: 15px;">
-                <select id="broker-select" onchange="switchBroker(this.selectedIndex)" 
-                        style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;">
-                    ${availableBrokers.map((broker, index) => `
-                        <option value="${index}" ${index === currentBrokerIndex ? 'selected' : ''}>
-                            ${broker.name}
-                        </option>
-                    `).join('')}
-                </select>
-            </div>
-        `;
-    }
-    
-    connStatus.innerHTML = statusHTML;
-}
-
 // Enviar comando de movimiento
 function sendMoveCommand(axis, direction) {
-    if (!client || !client.connected) {
-        alert("No hay conexión MQTT activa");
+    if (!currentDeviceMac) {
+        alert("Seleccione un dispositivo primero");
         return;
     }
     
-    // Calcular nuevo valor basado en dirección y velocidad
-    let newValue;
-    const step = currentSpeed / 10; // Paso basado en velocidad
+    const step = currentSpeed / 10;
+    let value;
     
     if (axis === 'pan') {
-        newValue = currentPan + (direction === 'left' ? -step : step);
-        newValue = Math.max(-90, Math.min(90, newValue)); // Limitar rango
-    } else { // tilt
-        newValue = currentTilt + (direction === 'down' ? -step : step);
-        newValue = Math.max(-30, Math.min(45, newValue)); // Limitar rango
+        value = currentPan + (direction === 'left' ? -step : step);
+        value = Math.max(-90, Math.min(90, value));
+    } else {
+        value = currentTilt + (direction === 'down' ? -step : step);
+        value = Math.max(-30, Math.min(45, value));
     }
     
-    // Crear mensaje MQTT
-    const message = {
-        command: "move",
+    sendCommand('move', {
         axis: axis,
-        value: Math.round(newValue),
+        value: Math.round(value),
         speed: currentSpeed
-    };
-    
-    client.publish(controlTopic, JSON.stringify(message), { qos: 1 }, (err) => {
-        if (err) {
-            console.error("Error al enviar comando:", err);
-        } else {
-            console.log("Comando enviado:", message);
-            
-            // Actualizar UI localmente (el dispositivo confirmará con mensaje de estado)
-            if (axis === 'pan') {
-                currentPan = newValue;
-                panValue.textContent = `${Math.round(newValue)}°`;
-            } else {
-                currentTilt = newValue;
-                tiltValue.textContent = `${Math.round(newValue)}°`;
-            }
-        }
     });
 }
 
-// Enviar comando de acción (stop, home, etc.)
+// Enviar comando de acción
 function sendActionCommand(action) {
-    if (!client || !client.connected) {
-        alert("No hay conexión MQTT activa");
+    if (!currentDeviceMac) {
+        alert("Seleccione un dispositivo primero");
         return;
     }
     
-    const message = {
-        command: action,
-        speed: currentSpeed
-    };
-    
-    client.publish(controlTopic, JSON.stringify(message), { qos: 1 }, (err) => {
-        if (err) {
-            console.error("Error al enviar comando:", err);
-        } else {
-            console.log("Comando enviado:", message);
-        }
-    });
+    sendCommand(action, { speed: currentSpeed });
 }
 
 // Manejar cambio de velocidad
@@ -236,19 +291,30 @@ function handleSpeedChange() {
     currentSpeed = parseInt(speedSlider.value);
     speedValue.textContent = `${currentSpeed}%`;
     
-    // Opcional: enviar actualización de velocidad al dispositivo
-    if (client && client.connected) {
-        const message = {
-            command: "set_speed",
-            speed: currentSpeed
-        };
-        
-        client.publish(controlTopic, JSON.stringify(message), { qos: 1 });
+    if (currentDeviceMac) {
+        sendCommand('set_speed', { speed: currentSpeed });
     }
 }
 
-// Asignar event listeners
+// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
+    // Configurar selectores
+    brokerSelect.innerHTML = availableBrokers.map((broker, index) => `
+        <option value="${index}">${broker.name}</option>
+    `).join('');
+    
+    brokerSelect.addEventListener('change', () => {
+        switchBroker(parseInt(brokerSelect.value));
+    });
+    
+    deviceSelect.addEventListener('change', () => {
+        if (deviceSelect.value) {
+            selectDevice(deviceSelect.value);
+        } else {
+            currentDeviceMac = null;
+        }
+    });
+    
     // Botones de movimiento
     document.querySelectorAll('.axis-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -270,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.btn-danger').addEventListener('click', () => sendActionCommand('stop'));
     document.querySelector('.btn-primary').addEventListener('click', () => sendActionCommand('home'));
     document.querySelector('.btn-secondary').addEventListener('click', () => {
-        // Menú de presets (simplificado)
         const preset = prompt("Seleccione preset (1-5):");
         if (preset) sendActionCommand(`preset_${preset}`);
     });
