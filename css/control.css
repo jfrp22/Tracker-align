@@ -1,31 +1,35 @@
 /* ==============================================
-CONTROL ROBOTICO
+ESTILOS ESPECÍFICOS PARA CONTROL PAN-TILT
 ============================================== */
+
 .robot-control-panel {
     background-color: var(--color-card);
-    border-radius: var(--radius-xl);
-    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--color-border);
-    max-width: 30rem;
-    margin: 0 auto;
-    text-align: center;
+    margin-top: var(--space-4);
+    transition: all var(--transition-normal) ease;
 }
 
 .axis-control {
-    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
 }
 
 .axis-group {
-    margin-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
 }
 
 .axis-group label {
-    display: block;
-    margin-bottom: var(--space-2);
     font-weight: 600;
-    color: var(--secondary-500);
-    font-size: var(--text-lg);
+    color: var(--color-primary);
+    font-size: var(--text-base);
+    text-align: center;
 }
 
 .controls {
@@ -36,34 +40,70 @@ CONTROL ROBOTICO
 }
 
 .axis-value {
-    min-width: 5rem;
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--color-primary);
-    background-color: var(--gray-100);
+    min-width: 4rem;
     padding: var(--space-2) var(--space-3);
+    background-color: var(--gray-100);
     border-radius: var(--radius);
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-primary);
 }
 
-.axis-btn {
-    width: 3.5rem;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--text-xl);
+.range-info {
+    font-size: var(--text-xs);
+    color: var(--gray-600);
+    text-align: center;
+    margin-top: var(--space-1);
 }
 
 .action-buttons {
     display: flex;
     justify-content: center;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
 }
 
-.action-buttons .btn {
-    min-width: 8rem;
-    padding: var(--space-3) var(--space-4);
+.btn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: all var(--transition-fast) ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background-color: var(--gps-danger);
+    color: var(--white);
+}
+
+.btn-danger:hover {
+    background-color: #d31665;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--gps-secondary);
+    color: var(--white);
+}
+
+.btn-secondary:hover {
+    background-color: #3729b1;
+    transform: translateY(-1px);
 }
 
 .speed-control {
@@ -75,8 +115,8 @@ CONTROL ROBOTICO
 
 .speed-control label {
     font-weight: 600;
-    color: var(--secondary-500);
-    font-size: var(--text-lg);
+    color: var(--color-primary);
+    font-size: var(--text-base);
 }
 
 .speed-slider {
@@ -108,105 +148,48 @@ CONTROL ROBOTICO
 }
 
 .speed-value {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-primary);
 }
 
-/* Controles de conexión */
-.connection-controls {
+.axis-btn {
+    width: 3rem;
+    height: 3rem;
     display: flex;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-lg);
 }
 
-.form-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: var(--space-2);
-    font-weight: 600;
-    color: var(--secondary-500);
-}
-
-.form-control {
-    width: 100%;
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background-color: var(--color-card);
-    color: var(--color-text);
-    font-size: var(--text-sm);
-}
-
-/* Estado de conexión */
-#connection-status {
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius);
-    margin-bottom: var(--space-4);
-    font-size: var(--text-sm);
-}
-
-#connection-status.connected {
-    background-color: var(--success-light);
-    color: var(--success);
-}
-
-#connection-status.reconnecting {
-    background-color: var(--warning-light);
-    color: var(--warning);
-}
-
-#connection-status.disconnected {
-    background-color: var(--danger-light);
-    color: var(--danger);
-}
-
-/* Responsive */
+/* MEDIA QUERIES */
 @media (max-width: 48em) {
     .robot-control-panel {
         padding: var(--space-4);
     }
     
-    .axis-btn {
-        width: 3rem;
-        height: 3rem;
+    .action-buttons {
+        flex-wrap: wrap;
     }
     
-    .action-buttons .btn {
-        min-width: 6rem;
+    .btn {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
     }
 }
 
-@media (max-width: 36em) {
+@media (max-width: 30em) {
     .controls {
         gap: var(--space-2);
     }
     
-    .axis-value {
-        min-width: 4rem;
-        font-size: var(--text-base);
+    .axis-btn {
+        width: 2.5rem;
+        height: 2.5rem;
     }
-}
-/* Añadir al CSS existente */
-.range-info {
-    font-size: var(--text-sm);
-    color: var(--gray-600);
-    margin-top: var(--space-1);
-}
-
-.btn-secondary {
-    background-color: var(--secondary-500);
-    color: var(--white);
-}
-
-.btn-secondary:hover,
-.btn-secondary:focus-visible {
-    background-color: var(--secondary-600);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
+    
+    .axis-value {
+        min-width: 3rem;
+    }
 }
