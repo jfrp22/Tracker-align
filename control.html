@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Brazo Robótico 3D | Área Protegida</title>
+    <title>Control Pan-Tilt | Área Protegida</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/control.css">
@@ -21,49 +21,43 @@
         
         <div class="content">
             <header>
-                <h1><i class="fas fa-robot"></i> Control Brazo Robótico 3D</h1>
-                <p class="subtitle">Control de Movimiento Articulado</p>
+                <h1><i class="fas fa-video"></i> Control Pan-Tilt</h1>
+                <p class="subtitle">Sistema de movimiento horizontal y vertical</p>
             </header>
             
             <main>
                 <div class="robot-control-panel">
                     <div class="axis-control">
                         <div class="axis-group">
-                            <label>Eje X</label>
+                            <label>Pan (Horizontal)</label>
                             <div class="controls">
                                 <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-left"></i></button>
-                                <span class="axis-value">150mm</span>
+                                <span class="axis-value">0°</span>
                                 <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-right"></i></button>
                             </div>
+                            <div class="range-info">Rango: -90° a +90°</div>
                         </div>
                         
                         <div class="axis-group">
-                            <label>Eje Y</label>
+                            <label>Tilt (Vertical)</label>
                             <div class="controls">
                                 <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-up"></i></button>
-                                <span class="axis-value">200mm</span>
+                                <span class="axis-value">0°</span>
                                 <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-down"></i></button>
                             </div>
-                        </div>
-                        
-                        <div class="axis-group">
-                            <label>Eje Z</label>
-                            <div class="controls">
-                                <button class="btn btn-primary axis-btn"><i class="fas fa-plus"></i></button>
-                                <span class="axis-value">50mm</span>
-                                <button class="btn btn-primary axis-btn"><i class="fas fa-minus"></i></button>
-                            </div>
+                            <div class="range-info">Rango: -30° a +45°</div>
                         </div>
                     </div>
                     
                     <div class="action-buttons">
-                        <button class="btn btn-danger"><i class="fas fa-stop"></i> STOP</button>
-                        <button class="btn btn-primary"><i class="fas fa-home"></i> HOME</button>
+                        <button class="btn btn-danger"><i class="fas fa-stop"></i> DETENER</button>
+                        <button class="btn btn-primary"><i class="fas fa-home"></i> CENTRAR</button>
+                        <button class="btn btn-secondary"><i class="fas fa-crosshairs"></i> PRESETS</button>
                     </div>
                     
                     <div class="speed-control">
                         <label>Velocidad</label>
-                        <input type="range" min="0" max="100" value="50" class="speed-slider">
+                        <input type="range" min="1" max="100" value="50" class="speed-slider">
                         <span class="speed-value">50%</span>
                     </div>
                 </div>
