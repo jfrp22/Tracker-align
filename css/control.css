@@ -139,3 +139,21 @@ CONTROL ROBOTICO
         font-size: var(--text-base);
     }
 }
+/* Añadir al CSS existente */
+.range-info {
+    font-size: var(--text-sm);
+    color: var(--gray-600);
+    margin-top: var(--space-1);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-500);
+    color: var(--white);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+    background-color: var(--secondary-600);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
