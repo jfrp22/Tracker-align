@@ -24,7 +24,18 @@
                 <h1><i class="fas fa-satellite-dish"></i> Control Pan-Tilt</h1>
                 <p class="subtitle">Sistema de movimiento horizontal y vertical</p>
             </header>
-            
+            <div class="connection-controls">
+                <div class="form-group">
+                    <label for="broker-select">Servidor MQTT:</label>
+                    <select id="broker-select" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="device-select">Dispositivo:</label>
+                    <select id="device-select" class="form-control">
+                        <option value="">Seleccione un dispositivo</option>
+                    </select>
+                </div>
+            </div>      
             <main>
                 <div class="robot-control-panel">
                     <div class="axis-control">
