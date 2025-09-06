@@ -124,6 +124,7 @@ function connectToBroker(index) {
         // Suscribirse a los topics necesarios
         client.subscribe(mqttTopics.nodesStatus, { qos: 1 });
         client.subscribe(mqttTopics.pairingResponse, { qos: 1 });
+        client.subscribe(mqttTopics.pairingRequest, { qos: 1 });
         client.subscribe(mqttTopics.unpairRequest, { qos: 1 });
         client.subscribe(mqttTopics.unpairConfirm, { qos: 1 });
         
@@ -260,6 +261,13 @@ function updateConnectionStatus(status, text) {
 
 // Actualizar/agregar dispositivo
 function updateDevice(data) {
+        if (!data || !data.node_id) {
+        console.warn("Mensaje sin formato válido:", data);
+        return;
+    }
+    
+    const mac = data.node_id; // Usar node_id en lugar de mac
+    
     if (!data.mac) {
         console.warn("Mensaje sin identificador MAC");
         return;
@@ -430,6 +438,13 @@ function saveNodeConfig() {
 // Función para descubrir nodos
 function discoverNodes() {
     client.publish(mqttTopics.discovery, 'DISCOVER_NODES', { qos: 1 });
+    
+    // También solicitar estado directamente a los topics conocidos
+    client.publish("iotlab/nodes/config", JSON.stringify({
+        target: "ALL",
+        action: "report_status"
+    }), { qos: 1 });
+    
     alert("Solicitud de descubrimiento enviada");
 }
 
