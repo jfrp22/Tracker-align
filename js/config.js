@@ -99,10 +99,12 @@ function handleUnpairRequest(message) {
 
 // Función para conectar al broker MQTT
 function connectToBroker(index) {
-    // Limpiar conexión anterior si existe
-    if (client) {
-        client.end();
-    }
+    // Usar el mismo broker que el firmware
+    const brokerUrls = [
+        "wss://test.mosquitto.org:8081/mqtt",
+        "wss://broker.hivemq.com:8084/mqtt", 
+        "wss://broker.emqx.io:8084/mqtt"
+    ];
     
     currentBrokerIndex = index;
     const broker = availableBrokers[currentBrokerIndex];
@@ -165,6 +167,15 @@ function connectToBroker(index) {
     
     // Procesar mensajes MQTT
     client.on('message', (topic, message) => {
+        const data = JSON.parse(message.toString());
+        const topicPath = topic.split('/');
+        
+        if (topicPath[1] === 'nodes' && topicPath[3] === 'status') {
+            // Formato: iotlab/nodes/MAC/status
+            data.mac = topicPath[2]; // Extraer MAC del topic
+            updateDevice(data);
+        }
+        
         console.log(`Mensaje recibido [${topic}]:`, message.toString());
         
         try {
@@ -258,6 +269,16 @@ function updateConnectionStatus(status, text) {
     
     statusElement.innerHTML = statusHTML;
 }
+
+function setupMQTTReconnection() {
+    setInterval(() => {
+        if (!client || !client.connected) {
+            console.log("Reconectando MQTT...");
+            connectToBroker(currentBrokerIndex);
+        }
+    }, 10000); // Intentar reconectar cada 10 segundos
+}
+
 
 // Actualizar/agregar dispositivo
 function updateDevice(data) {
