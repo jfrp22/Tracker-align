@@ -17,8 +17,9 @@ const availableBrokers = [
 // Configuración de temas MQTT
 const mqttTopics = {
     discovery: "iotlab/discovery",
-    nodesStatus: "iotlab/nodes/status",
+    nodesStatus: "iotlab/nodes/+/status",
     nodesConfig: "iotlab/nodes/config",
+    pairingRequest: "iotlab/pairing/request",
     pairingResponse: "iotlab/pairing/response",
     unpairRequest: "iotlab/pairing/unpair_request",
     unpairConfirm: "iotlab/pairing/unpair_confirm"
