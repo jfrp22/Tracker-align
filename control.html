@@ -5,7 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Servomotores - Sistema IoT</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/control.css">
+    <link rel="stylesheet" href="css/config.css"> <!-- Usamos el mismo CSS que config.html -->
+    <style>
+        /* Estilos adicionales específicos para control.html */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+            transition: all var(--transition-normal) ease;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(18.75rem, 1fr));
+            gap: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .servo-panel {
+            text-align: center;
+            padding: var(--space-4);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-normal) ease;
+        }
+
+        .servo-panel:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .servo-status {
+            margin: var(--space-4) 0;
+            font-size: var(--text-lg);
+            font-weight: 600;
+        }
+
+        .servo-controls {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-3);
+            margin: var(--space-4) 0;
+        }
+
+        .data-display {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            border-radius: var(--radius);
+            margin: var(--space-3) 0;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: var(--gray-600);
+            font-size: var(--text-sm);
+        }
+
+        .connection-controls {
+            display: flex;
+            gap: var(--space-3);
+            justify-content: center;
+            margin-top: var(--space-4);
+        }
+
+        h2 {
+            color: var(--secondary-600);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 2px solid var(--color-primary);
+            font-size: var(--text-xl);
+        }
+
+        h3 {
+            color: var(--gray-800);
+            margin-bottom: var(--space-3);
+            font-size: var(--text-lg);
+        }
+
+        @media (max-width: 48em) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .servo-controls, .connection-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -18,8 +113,9 @@
             <a href="main.html"><i class="fas fa-home"></i> Inicio</a>
             <a href="gps.html"><i class="fas fa-map-marked-alt"></i> Tracker GPS</a>
             <a href="config.html"><i class="fas fa-network-wired"></i> Configuración</a>
-            <a href="servo-control.html" class="active"><i class="fas fa-cog"></i> Control Servos</a>
+            <a href="control.html" class="active"><i class="fas fa-cog"></i> CMA</a>
             <a href="about.html"><i class="fas fa-info-circle"></i> Acerca de</a>
+            <a href="contact.html"><i class="fas fa-envelope"></i> Contacto</a>
         </nav>
         
         <div id="connection-status" class="status-indicator connecting">
@@ -44,7 +140,7 @@
             </div>
             
             <div class="connection-controls">
-                <select id="node-select" class="btn">
+                <select id="node-select" class="form-control" style="width: auto;">
                     <option value="">Seleccionar nodo...</option>
                 </select>
                 <button class="btn btn-primary" onclick="refreshNodes()">
