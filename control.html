@@ -3,89 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
-    <title>Control Pan-Tilt | Área Protegida</title>
+    <title>Control de Servomotores - Sistema IoT</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/gps.css">
-    <link rel="stylesheet" href="css/control.css">
+    <link rel="stylesheet" href="servo.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-satellite-dish"></i> Control Pan-Tilt</h1>
+            <h1><i class="fas fa-cogs"></i> Control de Servomotores</h1>
+            <p>Sistema de apuntamiento para antenas - Control por MQTT</p>
         </header>
         
         <nav>
-            <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
+            <a href="main.html"><i class="fas fa-home"></i> Inicio</a>
             <a href="gps.html"><i class="fas fa-map-marked-alt"></i> Tracker GPS</a>
             <a href="config.html"><i class="fas fa-network-wired"></i> Configuración</a>
-            <a href="control.html" class="active"><i class="fas fa-cog"></i> CMA</a>
+            <a href="servo-control.html" class="active"><i class="fas fa-cog"></i> Control Servos</a>
             <a href="about.html"><i class="fas fa-info-circle"></i> Acerca de</a>
-            <a href="contact.html"><i class="fas fa-envelope"></i> Contacto</a>
         </nav>
         
-        <div class="content">
-            <div id="connection-status" class="reconnecting">
-                <i class="fas fa-plug"></i> Conectando al servidor MQTT...
+        <div id="connection-status" class="status-indicator connecting">
+            <i class="fas fa-plug"></i> Conectando al servidor MQTT...
+        </div>
+        
+        <div class="card">
+            <h2>Selección de Nodo</h2>
+            <div class="data-display">
+                <div class="data-row">
+                    <span class="data-label">Nodo seleccionado:</span>
+                    <span id="selected-node">Ninguno</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Estado:</span>
+                    <span id="node-status"><span class="badge badge-offline">Offline</span></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Rol:</span>
+                    <span id="node-role">Desconocido</span>
+                </div>
             </div>
             
             <div class="connection-controls">
-                <div class="form-group">
-                    <label for="broker-select">Servidor MQTT:</label>
-                    <select id="broker-select" class="form-control"></select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="device-select">Dispositivo:</label>
-                    <select id="device-select" class="form-control">
-                        <option value="">Seleccione un dispositivo</option>
-                    </select>
+                <select id="node-select" class="btn">
+                    <option value="">Seleccionar nodo...</option>
+                </select>
+                <button class="btn btn-primary" onclick="refreshNodes()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="servo-panel">
+                    <h3><i class="fas fa-compass"></i> Servo A - Azimut</h3>
+                    <div class="servo-status" id="servoA-state">Detenido</div>
+                    
+                    <div class="data-display">
+                        <div class="data-row">
+                            <span class="data-label">Heading:</span>
+                            <span id="heading-value">0.0°</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Heading inicial:</span>
+                            <span id="heading-inicial-value">0.0°</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Azimut habilitado:</span>
+                            <span id="azimuth-enabled">No</span>
+                        </div>
+                    </div>
+                    
+                    <div class="servo-controls">
+                        <button class="btn btn-danger" onclick="controlServo('A', 'stop')">
+                            <i class="fas fa-stop"></i> Detener
+                        </button>
+                        <button class="btn btn-primary" onclick="controlServo('A', 'left')">
+                            <i class="fas fa-arrow-left"></i> Izquierda
+                        </button>
+                        <button class="btn btn-primary" onclick="controlServo('A', 'right')">
+                            <i class="fas fa-arrow-right"></i> Derecha
+                        </button>
+                    </div>
                 </div>
             </div>
             
-            <div class="robot-control-panel">
-                <div class="axis-control">
-                    <div class="axis-group">
-                        <label>Pan (Horizontal)</label>
-                        <div class="controls">
-                            <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-left"></i></button>
-                            <span class="axis-value">0°</span>
-                            <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-right"></i></button>
+            <div class="card">
+                <div class="servo-panel">
+                    <h3><i class="fas fa-arrow-up"></i> Servo B - Elevación</h3>
+                    <div class="servo-status" id="servoB-state">Detenido</div>
+                    
+                    <div class="data-display">
+                        <div class="data-row">
+                            <span class="data-label">Pitch:</span>
+                            <span id="pitch-value">0.0°</span>
                         </div>
-                        <div class="range-info">Rango: -90° a +90°</div>
+                        <div class="data-row">
+                            <span class="data-label">Roll:</span>
+                            <span id="roll-value">0.0°</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Yaw:</span>
+                            <span id="yaw-value">0.0°</span>
+                        </div>
                     </div>
                     
-                    <div class="axis-group">
-                        <label>Tilt (Vertical)</label>
-                        <div class="controls">
-                            <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-up"></i></button>
-                            <span class="axis-value">0°</span>
-                            <button class="btn btn-primary axis-btn"><i class="fas fa-arrow-down"></i></button>
-                        </div>
-                        <div class="range-info">Rango: -30° a +45°</div>
+                    <div class="servo-controls">
+                        <button class="btn btn-danger" onclick="controlServo('B', 'stop')">
+                            <i class="fas fa-stop"></i> Detener
+                        </button>
+                        <button class="btn btn-primary" onclick="controlServo('B', 'up')">
+                            <i class="fas fa-arrow-up"></i> Arriba
+                        </button>
+                        <button class="btn btn-primary" onclick="controlServo('B', 'down')">
+                            <i class="fas fa-arrow-down"></i> Abajo
+                        </button>
                     </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn btn-danger"><i class="fas fa-stop"></i> DETENER</button>
-                    <button class="btn btn-primary"><i class="fas fa-home"></i> CENTRAR</button>
-                    <button class="btn btn-secondary"><i class="fas fa-crosshairs"></i> PRESETS</button>
-                </div>
-                
-                <div class="speed-control">
-                    <label>Velocidad</label>
-                    <input type="range" min="1" max="100" value="50" class="speed-slider">
-                    <span class="speed-value">50%</span>
                 </div>
             </div>
         </div>
+        
+        <div class="card">
+            <h2>Configuración de Servos</h2>
+            <div class="data-display">
+                <div class="data-row">
+                    <span class="data-label">Velocidad fija:</span>
+                    <span id="servo-speed">50</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Rango permitido:</span>
+                    <span id="servo-range">90.0°</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn btn-warning" onclick="calibrateHeading()">
+                    <i class="fas fa-compass"></i> Calibrar Heading Inicial
+                </button>
+            </div>
+        </div>
     </div>
-    
-    <footer>
-        <p>&copy; 2025 Tracker | Versión 1.0</p>
-    </footer>
-    
+
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
-    <script src="js/control.js"></script>
+    <script src="servo.js"></script>
 </body>
 </html>
