@@ -285,22 +285,6 @@ function controlServo(servo, action) {
     console.log(`Comando enviado: ${servo} - ${action}`);
 }
 
-// Calibrar heading inicial
-function calibrateHeading() {
-    if (!selectedNode || !client || !client.connected) {
-        alert('Por favor, seleccione un nodo y asegúrese de estar conectado al broker MQTT');
-        return;
-    }
-    
-    const message = {
-        target: selectedNode,
-        command: 'calibrate_heading'
-    };
-    
-    client.publish(controlTopic, JSON.stringify(message));
-    console.log('Solicitud de calibración enviada');
-}
-
 // Actualizar lista de nodos
 function refreshNodes() {
     // Limpiar lista actual
