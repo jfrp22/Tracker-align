@@ -170,7 +170,22 @@ function connectToBroker(index) {
             const data = JSON.parse(message.toString());
             
             if (topic === mqttTopics.nodesStatus) {
-                updateDevice(data);
+                // Procesar información de emparejamiento correctamente
+                const deviceData = {
+                    mac: data.mac,
+                    role: data.role,
+                    status: data.status,
+                    ip: data.ip || 'N/A'
+                };
+                
+                // Añadir información de emparejamiento si está disponible
+                if (data.paired) {
+                    deviceData.paired_with = data.paired;
+                } else if (data.paired_with) {
+                    deviceData.paired_with = data.paired_with;
+                }
+                
+                updateDevice(deviceData);
             }
             
             if (topic === mqttTopics.pairingResponse) {
@@ -272,7 +287,7 @@ function updateDevice(data) {
             lastSeen: now,
             role: data.role || 'UNCONFIGURED',
             status: data.status || 'offline',
-            paired_with: data.paired_with || '',
+            paired_with: data.paired_with || data.paired || '',
             ip: data.ip || 'N/A'
         };
     } else {
@@ -280,6 +295,7 @@ function updateDevice(data) {
         if (data.role) devices[data.mac].role = data.role;
         if (data.status) devices[data.mac].status = data.status;
         if (data.paired_with !== undefined) devices[data.mac].paired_with = data.paired_with;
+        if (data.paired !== undefined) devices[data.mac].paired_with = data.paired;
         if (data.ip) devices[data.mac].ip = data.ip;
     }
     
