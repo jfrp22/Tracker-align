@@ -43,12 +43,6 @@ function requestUnpair(nodeMac) {
     alert("Solicitud de desemparejamiento enviada. Esperando confirmación...");
 }
 
-function debugConnection() {
-    console.log("Estado de conexión MQTT:", client ? client.connected : "No inicializado");
-    console.log("Dispositivos detectados:", Object.keys(devices).length);
-    console.log("Dispositivos:", devices);
-}
-
 // Función para manejar confirmaciones de desemparejamiento
 function handleUnpairConfirmation(message) {
     try {
@@ -105,12 +99,9 @@ function handleUnpairRequest(message) {
 
 // Función para conectar al broker MQTT
 function connectToBroker(index) {
+    // Limpiar conexión anterior si existe
     if (client) {
-        try {
-            client.end();
-        } catch (e) {
-            console.log("Error cerrando conexión anterior:", e);
-        }
+        client.end();
     }
     
     currentBrokerIndex = index;
@@ -133,7 +124,6 @@ function connectToBroker(index) {
         // Suscribirse a los topics necesarios
         client.subscribe(mqttTopics.nodesStatus, { qos: 1 });
         client.subscribe(mqttTopics.pairingResponse, { qos: 1 });
-        client.subscribe(mqttTopics.pairingRequest, { qos: 1 });
         client.subscribe(mqttTopics.unpairRequest, { qos: 1 });
         client.subscribe(mqttTopics.unpairConfirm, { qos: 1 });
         
@@ -150,11 +140,6 @@ function connectToBroker(index) {
     client.on('error', (err) => {
         console.error(`Error con broker ${broker.name}:`, err);
         updateConnectionStatus('disconnected', `Error con ${broker.name}`);
-        
-        // Mostrar más detalles del error
-        if (err.message.includes("WebSocket")) {
-            console.error("Error de WebSocket - posible problema CORS o broker no disponible");
-        }
         
         // Intentar conectar al siguiente broker si está habilitada la reconexión automática
         if (autoReconnectEnabled) {
@@ -178,49 +163,43 @@ function connectToBroker(index) {
     });
     
     // Procesar mensajes MQTT
-client.on('message', (topic, message) => {
-    console.log(`Mensaje recibido [${topic}]:`, message.toString());
-    
-    try {
-        const data = JSON.parse(message.toString());
-        const topicPath = topic.split('/');
+    client.on('message', (topic, message) => {
+        console.log(`Mensaje recibido [${topic}]:`, message.toString());
         
-        // Procesar mensajes de estado de nodos
-        if (topicPath[1] === 'nodes' && topicPath[3] === 'status') {
-            // Extraer MAC del topic y agregarla al objeto data
-            data.mac = topicPath[2];
-            updateDevice(data);
-            return;
-        }
-        
-        // Procesar otros tipos de mensajes
-        if (topic === mqttTopics.pairingResponse) {
-            if (data.status === "PAIRED") {
-                updateDevice({
-                    mac: data.slave_mac,
-                    paired_with: data.master_mac,
-                    status: "active"
-                });
-                updateDevice({
-                    mac: data.master_mac,
-                    paired_with: data.slave_mac,
-                    status: "active"
-                });
-                alert(`Emparejamiento exitoso: ${data.slave_mac} → ${data.master_mac}`);
+        try {
+            const data = JSON.parse(message.toString());
+            
+            if (topic === mqttTopics.nodesStatus) {
+                updateDevice(data);
             }
-        }
+            
+            if (topic === mqttTopics.pairingResponse) {
+                if (data.status === "PAIRED") {
+                    updateDevice({
+                        mac: data.slave_mac,
+                        paired_with: data.master_mac,
+                        status: "active"
+                    });
+                    updateDevice({
+                        mac: data.master_mac,
+                        paired_with: data.slave_mac,
+                        status: "active"
+                    });
+                    alert(`Emparejamiento exitoso: ${data.slave_mac} → ${data.master_mac}`);
+                }
+            }
 
-        if (topic === mqttTopics.unpairRequest) {
-            handleUnpairRequest(message.toString());
-        }
+            if (topic === mqttTopics.unpairRequest) {
+                handleUnpairRequest(message.toString());
+            }
 
-        if (topic === mqttTopics.unpairConfirm) {
-            handleUnpairConfirmation(message.toString());
+            if (topic === mqttTopics.unpairConfirm) {
+                handleUnpairConfirmation(message.toString());
+            }
+        } catch (e) {
+            console.error("Error al procesar mensaje:", e);
         }
-    } catch (e) {
-        console.error("Error al procesar mensaje:", e);
-    }
-});
+    });
 }
 
 // Función para intentar conectar al siguiente broker
@@ -279,43 +258,29 @@ function updateConnectionStatus(status, text) {
     statusElement.innerHTML = statusHTML;
 }
 
-function setupMQTTReconnection() {
-    setInterval(() => {
-        if (!client || !client.connected) {
-            console.log("Reconectando MQTT...");
-            connectToBroker(currentBrokerIndex);
-        }
-    }, 10000); // Intentar reconectar cada 10 segundos
-}
-
-
 // Actualizar/agregar dispositivo
 function updateDevice(data) {
-    // Usar node_id si mac no está presente (para compatibilidad)
-    const deviceMac = data.mac || data.node_id;
-    
-    if (!deviceMac) {
-        console.warn("Mensaje sin identificador MAC/node_id:", data);
+    if (!data.mac) {
+        console.warn("Mensaje sin identificador MAC");
         return;
     }
     
     const now = new Date();
-    if (!devices[deviceMac]) {
-        devices[deviceMac] = {
+    if (!devices[data.mac]) {
+        devices[data.mac] = {
             firstSeen: now,
             lastSeen: now,
             role: data.role || 'UNCONFIGURED',
             status: data.status || 'offline',
-            paired_with: data.paired_with || data.paired_device || '',
+            paired_with: data.paired_with || '',
             ip: data.ip || 'N/A'
         };
     } else {
-        devices[deviceMac].lastSeen = now;
-        if (data.role) devices[deviceMac].role = data.role;
-        if (data.status) devices[deviceMac].status = data.status;
-        if (data.paired_with !== undefined) devices[deviceMac].paired_with = data.paired_with;
-        if (data.paired_device !== undefined) devices[deviceMac].paired_with = data.paired_device;
-        if (data.ip) devices[deviceMac].ip = data.ip;
+        devices[data.mac].lastSeen = now;
+        if (data.role) devices[data.mac].role = data.role;
+        if (data.status) devices[data.mac].status = data.status;
+        if (data.paired_with !== undefined) devices[data.mac].paired_with = data.paired_with;
+        if (data.ip) devices[data.mac].ip = data.ip;
     }
     
     updateTable();
@@ -465,13 +430,6 @@ function saveNodeConfig() {
 // Función para descubrir nodos
 function discoverNodes() {
     client.publish(mqttTopics.discovery, 'DISCOVER_NODES', { qos: 1 });
-    
-    // También solicitar estado directamente a los topics conocidos
-    client.publish("iotlab/nodes/config", JSON.stringify({
-        target: "ALL",
-        action: "report_status"
-    }), { qos: 1 });
-    
     alert("Solicitud de descubrimiento enviada");
 }
 
