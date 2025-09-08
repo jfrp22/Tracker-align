@@ -1,4 +1,4 @@
-// Lista de brokers disponibles (misma que en gps.js)
+// Lista de brokers disponibles
 const availableBrokers = [
     {
         url: "wss://test.mosquitto.org:8081/mqtt",
