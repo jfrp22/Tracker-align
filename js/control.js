@@ -1,118 +1,206 @@
-// Configuración MQTT
+// Lista de brokers disponibles (misma que en gps.js)
 const availableBrokers = [
-    { url: "wss://test.mosquitto.org:8081/mqtt", name: "Mosquitto Público" },
-    { url: "wss://broker.emqx.io:8084/mqtt", name: "EMQX Público" },
-    { url: "wss://broker.hivemq.com:8884/mqtt", name: "HiveMQ Público" }
+    {
+        url: "wss://test.mosquitto.org:8081/mqtt",
+        name: "Mosquitto Público 1"
+    },
+    {
+        url: "wss://broker.emqx.io:8084/mqtt",
+        name: "EMQX Público"
+    },
+    {
+        url: "wss://broker.hivemq.com:8884/mqtt",
+        name: "Hivemq Público"
+    }
 ];
-
-const mqttTopics = {
-    nodesStatus: "iotlab/nodes/status",
-    nodesConfig: "iotlab/nodes/config",
-    servoControl: "iotlab/servo/control",
-    sensorData: "iotlab/sensor/data"
-};
 
 // Variables globales
 let client = null;
 let currentBrokerIndex = 0;
 let selectedNode = null;
-const nodes = {};
-let sensorUpdateInterval = null;
+let nodes = {};
+let autoReconnectEnabled = true;
+let brokerSwitchTimeout = null;
+
+// Tópicos MQTT
+const nodesStatusTopic = "iotlab/nodes/status";
+const controlTopic = "iotlab/servo/control";
+const sensorDataTopic = "iotlab/sensor/data";
 
 // Elementos del DOM
-const statusElement = document.getElementById('connection-status');
-const nodeSelect = document.getElementById('node-select');
-const selectedNodeElement = document.getElementById('selected-node');
-const nodeStatusElement = document.getElementById('node-status');
-const nodeRoleElement = document.getElementById('node-role');
+const connStatus = document.getElementById("connection-status");
+const nodeSelect = document.getElementById("node-select");
+const selectedNodeSpan = document.getElementById("selected-node");
+const nodeStatusSpan = document.getElementById("node-status");
+const nodeRoleSpan = document.getElementById("node-role");
+const headingValue = document.getElementById("heading-value");
+const headingInicialValue = document.getElementById("heading-inicial-value");
+const azimuthEnabled = document.getElementById("azimuth-enabled");
+const pitchValue = document.getElementById("pitch-value");
+const rollValue = document.getElementById("roll-value");
+const yawValue = document.getElementById("yaw-value");
+const servoAState = document.getElementById("servoA-state");
+const servoBState = document.getElementById("servoB-state");
+const servoSpeed = document.getElementById("servo-speed");
+const servoRange = document.getElementById("servo-range");
 
 // Conectar al broker MQTT
-function connectToBroker() {
-    statusElement.className = 'status-indicator connecting';
-    statusElement.innerHTML = '<i class="fas fa-plug"></i> Conectando al servidor MQTT...';
+function connectToBroker(index) {
+    // Limpiar conexión anterior si existe
+    if (client) {
+        client.end();
+    }
     
+    currentBrokerIndex = index;
     const broker = availableBrokers[currentBrokerIndex];
     
-    client = mqtt.connect(broker.url, {
-        clientId: 'web_servo_control_' + Math.random().toString(16).substr(2, 8),
-        clean: true,
-        keepalive: 60,
-        reconnectPeriod: 1000
-    });
+    updateConnectionStatus('connecting', `Conectando a ${broker.name}...`);
     
-    client.on('connect', function() {
-        statusElement.className = 'status-indicator connected';
-        statusElement.innerHTML = `<i class="fas fa-plug"></i> Conectado a ${broker.name}`;
+    const options = {
+        keepalive: 60,
+        clean: true,
+        reconnectPeriod: 1000,
+        connectTimeout: 30 * 1000,
+        clientId: 'control_' + Math.random().toString(16).substr(2, 8)
+    };
+    
+    client = mqtt.connect(broker.url, options);
+    
+    // Manejo de conexión MQTT
+    client.on('connect', () => {
+        console.log(`Conectado al broker ${broker.name}`);
+        updateConnectionStatus('connected', `Conectado a ${broker.name}`);
         
         // Suscribirse a los topics necesarios
-        client.subscribe(mqttTopics.nodesStatus, { qos: 1 });
-        client.subscribe(mqttTopics.sensorData, { qos: 1 });
+        client.subscribe(nodesStatusTopic, { qos: 1 });
+        client.subscribe(sensorDataTopic, { qos: 1 });
         
-        // Solicitar lista de nodos
-        discoverNodes();
+        // Reiniciar el timeout de verificación
+        if (brokerSwitchTimeout) {
+            clearTimeout(brokerSwitchTimeout);
+            brokerSwitchTimeout = null;
+        }
     });
     
-    client.on('error', function(error) {
-        statusElement.className = 'status-indicator disconnected';
-        statusElement.innerHTML = `<i class="fas fa-plug"></i> Error de conexión: ${error.message}`;
-        console.error('Error MQTT:', error);
+    client.on('error', (err) => {
+        console.error(`Error con broker ${broker.name}:`, err);
+        updateConnectionStatus('error', `Error con ${broker.name}`);
         
-        // Intentar con el siguiente broker después de 5 segundos
+        // Intentar conectar al siguiente broker si está habilitada la reconexión automática
+        if (autoReconnectEnabled) {
+            tryNextBroker();
+        }
+    });
+    
+    client.on('reconnect', () => {
+        console.log("Intentando reconectar...");
+        updateConnectionStatus('reconnecting', `Reconectando a ${broker.name}...`);
+    });
+    
+    client.on('offline', () => {
+        console.log(`Desconectado del broker ${broker.name}`);
+        updateConnectionStatus('disconnected', `Desconectado de ${broker.name}`);
+        
+        // Intentar conectar al siguiente broker si está habilitada la reconexión automática
+        if (autoReconnectEnabled) {
+            tryNextBroker();
+        }
+    });
+    
+    // Procesar mensajes MQTT
+    client.on('message', (topic, message) => {
+        try {
+            const data = JSON.parse(message.toString());
+            
+            if (topic === nodesStatusTopic) {
+                processNodeStatus(data);
+            } else if (topic === sensorDataTopic && selectedNode && data.mac === selectedNode) {
+                updateSensorData(data);
+            }
+        } catch (e) {
+            console.error("Error al procesar mensaje:", e);
+        }
+    });
+}
+
+// Intentar conectar al siguiente broker
+function tryNextBroker() {
+    if (brokerSwitchTimeout) return;
+    
+    brokerSwitchTimeout = setTimeout(() => {
+        const nextIndex = (currentBrokerIndex + 1) % availableBrokers.length;
+        console.log(`Intentando conectar al siguiente broker: ${availableBrokers[nextIndex].name}`);
+        connectToBroker(nextIndex);
+        brokerSwitchTimeout = null;
+    }, 5000); // Esperar 5 segundos antes de cambiar de broker
+}
+
+// Cambiar manualmente de broker
+function switchBroker(index) {
+    if (index >= 0 && index < availableBrokers.length) {
+        autoReconnectEnabled = false; // Deshabilitar auto-reconexión para cambios manuales
+        connectToBroker(index);
+        
+        // Volver a habilitar auto-reconexión después de 30 segundos
         setTimeout(() => {
-            currentBrokerIndex = (currentBrokerIndex + 1) % availableBrokers.length;
-            connectToBroker();
-        }, 5000);
-    });
-    
-    client.on('message', function(topic, message) {
-        const data = JSON.parse(message.toString());
-        
-        if (topic === mqttTopics.nodesStatus) {
-            updateNodeList(data);
-        }
-        
-        if (topic === mqttTopics.sensorData && selectedNode && data.mac === selectedNode) {
-            updateSensorData(data);
-        }
-    });
-    
-    client.on('reconnect', function() {
-        statusElement.className = 'status-indicator connecting';
-        statusElement.innerHTML = '<i class="fas fa-plug"></i> Reconectando...';
-    });
-    
-    client.on('offline', function() {
-        statusElement.className = 'status-indicator disconnected';
-        statusElement.innerHTML = '<i class="fas fa-plug"></i> Desconectado del servidor MQTT';
-    });
+            autoReconnectEnabled = true;
+        }, 30000);
+    }
 }
 
-// Descubrir nodos en la red
-function discoverNodes() {
-    // Los nodos publican automáticamente su estado, no es necesario enviar un mensaje de descubrimiento
-    console.log("Escuchando nodos...");
+// Actualizar estado de conexión en la UI
+function updateConnectionStatus(status, text) {
+    connStatus.className = `status-indicator ${status}`;
+    
+    let statusHTML = `<i class="fas fa-plug"></i> ${text}`;
+    
+    // Mostrar selector de broker solo cuando esté conectado
+    if (status === 'connected') {
+        statusHTML += `
+            <div style="display: inline-block; margin-left: 15px;">
+                <select id="broker-select" onchange="switchBroker(this.selectedIndex)" 
+                        style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    ${availableBrokers.map((broker, index) => `
+                        <option value="${index}" ${index === currentBrokerIndex ? 'selected' : ''}>
+                            ${broker.name}
+                        </option>
+                    `).join('')}
+                </select>
+            </div>
+        `;
+    }
+    
+    connStatus.innerHTML = statusHTML;
 }
 
-// Actualizar lista de nodos disponibles
-function updateNodeList(nodeData) {
-    const mac = nodeData.mac;
+// Procesar estado de los nodos
+function processNodeStatus(data) {
+    const mac = data.mac;
+    if (!mac) return;
+    
+    // Actualizar/agregar nodo
     nodes[mac] = {
-        ...nodeData,
-        lastSeen: new Date()
+        mac: mac,
+        role: data.role || 'UNKNOWN',
+        status: data.status || 'unknown',
+        ip: data.ip || '',
+        rssi: data.rssi || 0,
+        paired: data.paired || '',
+        lastSeen: Date.now()
     };
     
     // Actualizar selector de nodos
     updateNodeSelector();
     
-    // Si este nodo está seleccionado, actualizar su información
+    // Si hay un nodo seleccionado, actualizar su información
     if (selectedNode === mac) {
-        updateSelectedNodeInfo();
+        updateNodeInfo(nodes[mac]);
     }
 }
 
-// Actualizar el selector de nodos
+// Actualizar selector de nodos
 function updateNodeSelector() {
-    // Guardar la selección actual
+    // Guardar selección actual
     const currentSelection = nodeSelect.value;
     
     // Limpiar selector
@@ -127,176 +215,135 @@ function updateNodeSelector() {
         nodeSelect.appendChild(option);
     });
     
-    // Restaurar selección si todavía existe
-    if (nodes[currentSelection]) {
+    // Restaurar selección si aún existe
+    if (currentSelection && nodes[currentSelection]) {
         nodeSelect.value = currentSelection;
     }
 }
 
 // Actualizar información del nodo seleccionado
-function updateSelectedNodeInfo() {
-    if (!selectedNode || !nodes[selectedNode]) {
-        selectedNodeElement.textContent = 'Ninguno';
-        nodeStatusElement.innerHTML = '<span class="badge badge-offline">Offline</span>';
-        nodeRoleElement.textContent = 'Desconocido';
-        return;
-    }
+function updateNodeInfo(node) {
+    selectedNodeSpan.textContent = node.mac;
+    nodeRoleSpan.textContent = node.role;
     
-    const node = nodes[selectedNode];
-    selectedNodeElement.textContent = selectedNode;
-    nodeRoleElement.textContent = node.role;
-    
-    // Verificar si el nodo está online (última actualización hace menos de 2 minutos)
-    const isOnline = (new Date() - node.lastSeen) < 120000;
-    
-    if (isOnline) {
-        nodeStatusElement.innerHTML = '<span class="badge badge-online">Online</span>';
-        
-        // Solicitar datos del sensor si no estamos ya recibiendo updates
-        if (!sensorUpdateInterval) {
-            requestSensorData();
-            sensorUpdateInterval = setInterval(requestSensorData, 5000);
-        }
+    // Actualizar estado
+    let statusHTML = '';
+    if (node.status === 'active') {
+        statusHTML = '<span class="badge badge-online">Online</span>';
     } else {
-        nodeStatusElement.innerHTML = '<span class="badge badge-offline">Offline</span>';
-        
-        // Detener solicitud de datos del sensor
-        if (sensorUpdateInterval) {
-            clearInterval(sensorUpdateInterval);
-            sensorUpdateInterval = null;
-        }
+        statusHTML = '<span class="badge badge-offline">Offline</span>';
     }
+    nodeStatusSpan.innerHTML = statusHTML;
 }
 
-// Solicitar datos del sensor al nodo seleccionado
-function requestSensorData() {
-    if (!selectedNode) return;
-    
-    // No es necesario enviar una solicitud explícita porque los nodos
-    // publican automáticamente sus datos cada 10 segundos (statusInterval)
-    // y datos del sensor cada 5 segundos (gpsInterval)
-}
-
-// Actualizar la interfaz con los datos del sensor
+// Actualizar datos de sensores
 function updateSensorData(data) {
-    document.getElementById('heading-value').textContent = data.heading !== undefined ? 
-        data.heading.toFixed(1) + '°' : '0.0°';
-        
-    document.getElementById('pitch-value').textContent = data.pitch !== undefined ? 
-        data.pitch.toFixed(1) + '°' : '0.0°';
-        
-    document.getElementById('roll-value').textContent = data.roll !== undefined ? 
-        data.roll.toFixed(1) + '°' : '0.0°';
-        
-    document.getElementById('yaw-value').textContent = data.yaw !== undefined ? 
-        data.yaw.toFixed(1) + '°' : '0.0°';
-        
-    document.getElementById('azimuth-enabled').textContent = data.azimuth_enabled ? 'Sí' : 'No';
+    headingValue.textContent = data.heading !== undefined ? `${data.heading.toFixed(1)}°` : '0.0°';
+    headingInicialValue.textContent = data.heading_inicial !== undefined ? `${data.heading_inicial.toFixed(1)}°` : '0.0°';
+    pitchValue.textContent = data.pitch !== undefined ? `${data.pitch.toFixed(1)}°` : '0.0°';
+    rollValue.textContent = data.roll !== undefined ? `${data.roll.toFixed(1)}°` : '0.0°';
+    yawValue.textContent = data.yaw !== undefined ? `${data.yaw.toFixed(1)}°` : '0.0°';
     
-    // Actualizar estados de los servos si están disponibles en los datos
-    if (data.servoA_state) {
-        document.getElementById('servoA-state').textContent = data.servoA_state;
+    azimuthEnabled.textContent = data.azimuth_enabled ? 'Sí' : 'No';
+    servoAState.textContent = getServoStateText(data.servoA_state);
+    servoBState.textContent = getServoStateText(data.servoB_state);
+    
+    if (data.servo_speed !== undefined) {
+        servoSpeed.textContent = data.servo_speed;
     }
     
-    if (data.servoB_state) {
-        document.getElementById('servoB-state').textContent = data.servoB_state;
+    if (data.servo_range !== undefined) {
+        servoRange.textContent = `${data.servo_range}°`;
     }
 }
 
-// Controlar los servomotores
+// Obtener texto del estado del servo
+function getServoStateText(state) {
+    switch(state) {
+        case 0: return 'Detenido';
+        case 1: return 'Izquierda/Arriba';
+        case 2: return 'Derecha/Abajo';
+        default: return 'Desconocido';
+    }
+}
+
+// Controlar servomotor
 function controlServo(servo, action) {
-    if (!selectedNode) {
-        alert('Por favor, selecciona un nodo primero');
+    if (!selectedNode || !client || !client.connected) {
+        alert('Por favor, seleccione un nodo y asegúrese de estar conectado al broker MQTT');
         return;
     }
     
-    if (!client || !client.connected) {
-        alert('No hay conexión MQTT activa');
-        return;
-    }
-    
-    const topic = `iotlab/nodes/${selectedNode}/servo`;
-    const message = JSON.stringify({
+    const message = {
+        target: selectedNode,
+        command: 'servo_control',
         servo: servo,
-        action: action,
-        timestamp: Date.now()
-    });
+        action: action
+    };
     
-    client.publish(topic, message, { qos: 1 }, function(err) {
-        if (err) {
-            console.error('Error al enviar comando:', err);
-            alert('Error al enviar comando al servomotor');
-        } else {
-            console.log('Comando enviado:', message);
-        }
-    });
+    client.publish(controlTopic, JSON.stringify(message));
+    console.log(`Comando enviado: ${servo} - ${action}`);
 }
 
 // Calibrar heading inicial
 function calibrateHeading() {
-    if (!selectedNode) {
-        alert('Por favor, selecciona un nodo primero');
+    if (!selectedNode || !client || !client.connected) {
+        alert('Por favor, seleccione un nodo y asegúrese de estar conectado al broker MQTT');
         return;
     }
     
-    if (!client || !client.connected) {
-        alert('No hay conexión MQTT activa');
-        return;
-    }
+    const message = {
+        target: selectedNode,
+        command: 'calibrate_heading'
+    };
     
-    const topic = `iotlab/nodes/${selectedNode}/calibrate`;
-    const message = JSON.stringify({
-        command: "calibrate_heading",
-        timestamp: Date.now()
-    });
-    
-    client.publish(topic, message, { qos: 1 }, function(err) {
-        if (err) {
-            console.error('Error al enviar comando de calibración:', err);
-            alert('Error al enviar comando de calibración');
-        } else {
-            console.log('Comando de calibración enviado');
-            alert('Comando de calibración enviado. El heading actual se establecerá como heading inicial.');
-        }
-    });
+    client.publish(controlTopic, JSON.stringify(message));
+    console.log('Solicitud de calibración enviada');
 }
 
-// Refrescar lista de nodos
+// Actualizar lista de nodos
 function refreshNodes() {
     // Limpiar lista actual
-    for (const mac in nodes) {
-        // Marcar todos los nodos como offline inicialmente
-        nodes[mac].lastSeen = new Date(0);
-    }
-    
-    // Actualizar UI
+    nodes = {};
     updateNodeSelector();
+    selectedNode = null;
+    selectedNodeSpan.textContent = 'Ninguno';
+    nodeStatusSpan.innerHTML = '<span class="badge badge-offline">Offline</span>';
+    nodeRoleSpan.textContent = 'Desconocido';
     
-    if (selectedNode) {
-        updateSelectedNodeInfo();
-    }
+    console.log('Lista de nodos actualizada');
 }
 
-// Inicializar cuando el DOM esté cargado
-document.addEventListener('DOMContentLoaded', function() {
-    // Configurar evento de cambio en el selector de nodos
-    nodeSelect.addEventListener('change', function() {
-        selectedNode = this.value;
-        updateSelectedNodeInfo();
-        
-        // Detener intervalo anterior si existe
-        if (sensorUpdateInterval) {
-            clearInterval(sensorUpdateInterval);
-            sensorUpdateInterval = null;
-        }
-        
-        // Si se seleccionó un nodo, comenzar a solicitar datos del sensor
-        if (selectedNode) {
-            requestSensorData();
-            sensorUpdateInterval = setInterval(requestSensorData, 5000);
+// Inicialización
+document.addEventListener('DOMContentLoaded', () => {
+    // Configurar evento de selección de nodo
+    nodeSelect.addEventListener('change', () => {
+        selectedNode = nodeSelect.value;
+        if (selectedNode && nodes[selectedNode]) {
+            updateNodeInfo(nodes[selectedNode]);
+        } else {
+            selectedNodeSpan.textContent = 'Ninguno';
+            nodeStatusSpan.innerHTML = '<span class="badge badge-offline">Offline</span>';
+            nodeRoleSpan.textContent = 'Desconocido';
         }
     });
     
-    // Conectar al broker MQTT
-    connectToBroker();
+    // Conectar al primer broker al cargar la página
+    connectToBroker(0);
+    
+    // Actualizar periódicamente el estado de los nodos
+    setInterval(() => {
+        const now = Date.now();
+        Object.keys(nodes).forEach(mac => {
+            // Marcar como offline si no se ha visto en 30 segundos
+            if (now - nodes[mac].lastSeen > 30000) {
+                nodes[mac].status = 'offline';
+                
+                // Si es el nodo seleccionado, actualizar UI
+                if (selectedNode === mac) {
+                    nodeStatusSpan.innerHTML = '<span class="badge badge-offline">Offline</span>';
+                }
+            }
+        });
+    }, 10000); // Verificar cada 10 segundos
 });
