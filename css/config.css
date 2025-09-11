@@ -538,39 +538,65 @@ tr:hover {
 }
 
 /* ==============================================
-MEDIA QUERIES
+CORRECCIÓN PARA DISPOSITIVOS MÓVILES
 ============================================== */
-@media (max-width: 48em) { /* 768px */
+@media (max-width: 48em) {
+    body {
+        padding: var(--space-2);
+    }
+    
     .container {
-        padding: var(--space-4);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+    }
+    
+    .table-container {
+        border-radius: var(--radius);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 100%;
     }
     
     th, td {
-        padding: var(--space-2) var(--space-3);
-        font-size: var(--text-sm);
-    }
-
-    h1 {
-        font-size: var(--text-xl);
+        padding: var(--space-2);
+        font-size: var(--text-xs);
+        white-space: nowrap;
     }
 }
 
-@media (max-width: 30em) { /* 480px */
+@media (max-width: 30em) {
     nav {
-        gap: var(--space-2);
-        padding: var(--space-3);
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-1);
     }
     
     nav a {
-        padding: var(--space-1) var(--space-2);
-        font-size: var(--text-xs);
+        justify-content: center;
+        text-align: center;
     }
+    
+    .status-indicator {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-1);
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: var(--space-2);
+    }
+}
 
-    .modal-body {
-        padding: var(--space-3);
-    }
+/* Mejora el scroll en dispositivos móviles */
+.table-container::-webkit-scrollbar {
+    height: 6px;
+}
 
-    .modal-footer {
-        padding: var(--space-3);
-    }
+.table-container::-webkit-scrollbar-thumb {
+    background-color: var(--gray-400);
+    border-radius: var(--radius-full);
 }
