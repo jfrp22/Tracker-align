@@ -11,13 +11,39 @@ RESET MEJORADO Y BASE
     /* ==============================================
     VARIABLES DEL SISTEMA DE DISEÑO
     ============================================== */
-    /* Colores GPS específicos */
-    --gps-primary: #4361ee;
-    --gps-primary-hover: #3a56d4;
-    --gps-secondary: #3f37c9;
-    --gps-success: #4cc9f0;
-    --gps-danger: #f72585;
-    --gps-warning: #f8961e;
+    /* Colores primarios */
+    --primary-50: #e8eaf6;
+    --primary-100: #c5cae9;
+    --primary-200: #9fa8da;
+    --primary-300: #7986cb;
+    --primary-400: #5c6bc0;
+    --primary-500: #4361ee;
+    --primary-600: #3949ab;
+    --primary-700: #303f9f;
+    --primary-800: #283593;
+    --primary-900: #1a237e;
+    
+    /* Colores secundarios */
+    --secondary-50: #e8eaf6;
+    --secondary-100: #c5cbe3;
+    --secondary-200: #a2a9d0;
+    --secondary-300: #7f87bd;
+    --secondary-400: #5c65aa;
+    --secondary-500: #3f37c9;
+    --secondary-600: #3830b5;
+    --secondary-700: #3129a1;
+    --secondary-800: #2a228d;
+    --secondary-900: #231b79;
+    
+    /* Colores de estado */
+    --success: #28a745;
+    --success-light: #d4edda;
+    --danger: #dc3545;
+    --danger-light: #f8d7da;
+    --warning: #ffc107;
+    --warning-light: #fff3cd;
+    --info: #17a2b8;
+    --info-light: #d1ecf1;
     
     /* Escala de grises */
     --white: #ffffff;
@@ -42,12 +68,16 @@ RESET MEJORADO Y BASE
     
     /* Tipografía */
     --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --text-xs: 0.75rem;    /* 12px */
     --text-sm: 0.875rem;  /* 14px */
     --text-base: 1rem;    /* 16px */
     --text-lg: 1.125rem;  /* 18px */
     --text-xl: 1.25rem;   /* 20px */
     --text-2xl: 1.5rem;   /* 24px */
+    --text-3xl: 1.875rem; /* 30px */
+    --text-4xl: 2.25rem;  /* 36px */
+    --text-5xl: 3rem;     /* 48px */
     
     /* Espaciado */
     --space-1: 0.25rem;   /* 4px */
@@ -58,6 +88,11 @@ RESET MEJORADO Y BASE
     --space-6: 1.5rem;    /* 24px */
     --space-8: 2rem;      /* 32px */
     --space-10: 2.5rem;  /* 40px */
+    --space-12: 3rem;     /* 48px */
+    --space-16: 4rem;     /* 64px */
+    --space-20: 5rem;     /* 80px */
+    --space-24: 6rem;     /* 96px */
+    --space-32: 8rem;    /* 128px */
     
     /* Bordes */
     --radius-sm: 0.125rem; /* 2px */
@@ -65,6 +100,8 @@ RESET MEJORADO Y BASE
     --radius-md: 0.375rem; /* 6px */
     --radius-lg: 0.5rem;   /* 8px */
     --radius-xl: 0.75rem; /* 12px */
+    --radius-2xl: 1rem;    /* 16px */
+    --radius-3xl: 1.5rem;  /* 24px */
     --radius-full: 9999px;
     
     /* Transiciones */
@@ -73,28 +110,23 @@ RESET MEJORADO Y BASE
     --transition-slow: 400ms;
     --transition-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
     
-    /* Breakpoints basados en em para mejor zoom */
-    --screen-sm: 40em;    /* 640px */
-    --screen-md: 48em;    /* 768px */
-    --screen-lg: 64em;   /* 1024px */
-    
     /* Variables para modo oscuro */
     --color-bg: var(--white);
     --color-text: var(--gray-900);
     --color-border: var(--gray-200);
     --color-card: var(--white);
-    --color-primary: var(--gps-primary);
-    --color-primary-hover: var(--gps-primary-hover);
+    --color-primary: var(--primary-500);
+    --color-primary-hover: var(--primary-600);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --color-bg: var(--gray-500);
+        --color-bg: var(--gray-700);
         --color-text: var(--gray-900);
         --color-border: var(--gray-700);
         --color-card: var(--gray-500);
-        --color-primary: var(--gps-primary);
-        --color-primary-hover: var(--gps-primary-hover);
+        --color-primary: var(--primary-500);
+        --color-primary-hover: var(--primary-300);
     }
 }
 
@@ -120,26 +152,28 @@ body {
 }
 
 /* ==============================================
-COMPONENTES GPS
+COMPONENTES
 ============================================== */
 .container {
-    width: 100%;
-    max-width: 62.5rem; /* 1000px */
+    max-width: 75rem; /* 1200px */
     margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-5);
+    transition: all var(--transition-normal) ease;
 }
 
 /* NAVEGACIÓN */
 nav {
     background: var(--color-primary);
     padding: var(--space-3);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: var(--space-2) var(--space-5);
+    margin-bottom: var(--space-5);
     transition: all var(--transition-normal) ease;
 }
 
@@ -150,7 +184,7 @@ nav a {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-1) var(--space-3);
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast) ease;
     font-size: var(--text-sm);
@@ -165,200 +199,167 @@ nav a i {
     font-size: var(--text-base);
 }
 
-/* CONTENIDO PRINCIPAL */
-.content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    background-color: var(--color-card);
-    padding: var(--space-5);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition-normal) ease;
-}
-
 /* HEADER */
 header {
     text-align: center;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
 }
 
 h1 {
     color: var(--color-primary);
-    margin-bottom: var(--space-3);
-    font-size: clamp(var(--text-xl), 5vw, var(--text-2xl));
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    font-size: var(--text-2xl);
     font-weight: 600;
 }
 
-/* MAPA */
-#map {
-    height: 75vh;
-    min-height: 25rem; /* 400px */
-    width: 100%;
-    border-radius: var(--radius-lg);
-    margin-top: var(--space-1);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--color-border);
-    transition: all var(--transition-normal) ease;
+/* CONTENIDO PRINCIPAL */
+.content {
+    position: relative;
 }
 
-/* ESTADO DE CONEXIÓN */
+/* INDICADOR DE ESTADO */
 #connection-status {
-    display: inline-flex;
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    text-align: center;
+    margin-bottom: var(--space-5);
+    font-weight: 500;
+    display: flex;
     align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-full);
+    justify-content: center;
+    gap: var(--space-2);
     font-size: var(--text-sm);
-    margin-top: var(--space-1);
-    background-color: var(--gray-50);
-    border: 1px solid var(--color-border);
     transition: all var(--transition-normal) ease;
 }
 
 .connected {
-    background-color: var(--gps-success) !important;
-    color: var(--white) !important;
-    border-color: var(--gps-success) !important;
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success);
+    border-left: 3px solid var(--success);
 }
 
 .disconnected {
-    background-color: var(--gps-danger) !important;
-    color: var(--white) !important;
-    border-color: var(--gps-danger) !important;
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger);
+    border-left: 3px solid var(--danger);
 }
 
-.reconnecting {
-    background-color: var(--gps-warning) !important;
-    color: var(--white) !important;
-    border-color: var(--gps-warning) !important;
+.connecting, .reconnecting {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning);
+    border-left: 3px solid var(--warning);
 }
 
-/* CONTROLES DE DISPOSITIVO */
+/* CONTROLES DE DISPOSITIVOS */
 .device-controls {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
+    margin-bottom: var(--space-5);
     justify-content: center;
-    margin-bottom: var(--space-3);
 }
 
 .device-btn {
-    background: var(--color-primary);
-    color: var(--white);
-    border: none;
     padding: var(--space-2) var(--space-4);
     border-radius: var(--radius);
+    border: none;
     cursor: pointer;
-    transition: all var(--transition-fast) ease;
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
     font-size: var(--text-sm);
     font-weight: 500;
+    transition: all var(--transition-fast) ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background-color: var(--gray-200);
+    color: var(--gray-800);
 }
 
 .device-btn:hover {
-    background: var(--color-primary-hover);
+    background-color: var(--gray-300);
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
 }
 
-.device-btn:focus {
-    outline: 2px solid var(--gps-primary);
-    outline-offset: 2px;
-}
-
 .device-btn.active {
-    background: var(--gps-secondary);
-    box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--gps-secondary);
+    background-color: var(--color-primary);
+    color: var(--white);
 }
 
-.device-btn i {
+.device-btn.active:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* MAPA */
+#map {
+    height: 500px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    z-index: 1;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    color: var(--gray-600);
     font-size: var(--text-sm);
 }
 
-/* MARCADORES PERSONALIZADOS */
-.custom-icon {
-    background: transparent;
-    border: none;
-}
-
-.device-marker {
-    width: 1.875rem; /* 30px */
-    height: 1.875rem; /* 30px */
-    border-radius: 50% 50% 50% 0;
-    background: var(--gps-primary);
-    transform: rotate(-45deg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--white);
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-fast) ease;
-}
-
-.device-marker i {
-    transform: rotate(45deg);
-    font-size: 0.875rem; /* 14px */
-    margin-top: 0.125rem; /* 2px */
-    margin-right: 0.125rem; /* 2px */
-}
-
-.leaflet-popup-content {
-    margin: var(--space-3) var(--space-4) !important;
-    font-size: var(--text-sm) !important;
-    color: var(--gray-900) !important;
-}
-
 /* ==============================================
-MEDIA QUERIES
+CORRECCIÓN PARA DISPOSITIVOS MÓVILES
 ============================================== */
-@media (max-width: 48em) { /* 768px */
+@media (max-width: 48em) {
     body {
-        padding: var(--space-4);
+        padding: var(--space-2);
     }
     
-    .content {
-        padding: var(--space-4);
-    }
-    
-    #map {
-        height: 65vh;
-    }
-    
-    .device-controls {
-        gap: var(--space-2);
-    }
-}
-
-@media (max-width: 30em) { /* 480px */
-    nav {
-        gap: var(--space-1);
+    .container {
         padding: var(--space-3);
+        border-radius: var(--radius-md);
+    }
+    
+    nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-1);
     }
     
     nav a {
-        padding: var(--space-1) var(--space-2);
-        font-size: var(--text-xs);
+        justify-content: center;
+        text-align: center;
     }
     
     #map {
-        height: 55vh;
-        min-height: 18.75rem; /* 300px */
+        height: 350px;
     }
     
     .device-controls {
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
     }
     
     .device-btn {
-        width: 100%;
         justify-content: center;
+    }
+}
+
+@media (max-width: 30em) {
+    h1 {
+        font-size: var(--text-xl);
+    }
+    
+    #connection-status {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-1);
     }
 }
