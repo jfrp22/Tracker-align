@@ -35,14 +35,11 @@ const nodeStatusSpan = document.getElementById("node-status");
 const nodeRoleSpan = document.getElementById("node-role");
 const headingValue = document.getElementById("heading-value");
 const headingInicialValue = document.getElementById("heading-inicial-value");
-const azimuthEnabled = document.getElementById("azimuth-enabled");
 const pitchValue = document.getElementById("pitch-value");
 const rollValue = document.getElementById("roll-value");
 const yawValue = document.getElementById("yaw-value");
 const servoAState = document.getElementById("servoA-state");
 const servoBState = document.getElementById("servoB-state");
-const servoSpeed = document.getElementById("servo-speed");
-const servoRange = document.getElementById("servo-range");
 
 // Conectar al broker MQTT
 function connectToBroker(index) {
@@ -244,17 +241,9 @@ function updateSensorData(data) {
     rollValue.textContent = data.roll !== undefined ? `${data.roll.toFixed(1)}°` : '0.0°';
     yawValue.textContent = data.yaw !== undefined ? `${data.yaw.toFixed(1)}°` : '0.0°';
     
-    azimuthEnabled.textContent = data.azimuth_enabled ? 'Sí' : 'No';
     servoAState.textContent = getServoStateText(data.servoA_state);
     servoBState.textContent = getServoStateText(data.servoB_state);
     
-    if (data.servo_speed !== undefined) {
-        servoSpeed.textContent = data.servo_speed;
-    }
-    
-    if (data.servo_range !== undefined) {
-        servoRange.textContent = `${data.servo_range}°`;
-    }
 }
 
 // Obtener texto del estado del servo
