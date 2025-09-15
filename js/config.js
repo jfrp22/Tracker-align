@@ -5,15 +5,31 @@ let currentBrokerIndex = 0;
 let client = null;
 let brokerSwitchTimeout = null;
 let autoReconnectEnabled = true;
+let unpairTimeout = null;
 
-// Elementos del DOM
-const statusElement = document.getElementById('connection-status');
-const nodesBody = document.getElementById('nodes-body');
-const configModal = document.getElementById('config-modal');
-const modalTitle = document.getElementById('modal-title');
-const nodeRoleSelect = document.getElementById('node-role');
-const pairingGroup = document.getElementById('pairing-group');
-const pairDeviceSelect = document.getElementById('pair-device');
+// Brokers MQTT disponibles
+const availableBrokers = [
+    { name: "Mosquitto", url: "wss://test.mosquitto.org:8081" },
+    { name: "HiveMQ", url: "wss://broker.hivemq.com:8884" },
+    { name: "EMQX", url: "wss://broker.emqx.io:8084" }
+];
+
+// Topics MQTT
+const mqttTopics = {
+    nodesStatus: "iotlab/nodes/status",
+    nodesConfig: "iotlab/nodes/config",
+    pairingResponse: "iotlab/pairing/response",
+    unpairRequest: "iotlab/pairing/unpair_request",
+    unpairConfirm: "iotlab/pairing/unpair_confirm",
+    discovery: "iotlab/nodes/discovery"
+};
+
+// Timeouts
+const timeouts = {
+    brokerSwitchDelay: 5000,
+    offlineThreshold: 120000, // 2 minutos
+    statusCheckInterval: 30000 // 30 segundos
+};
 
 // ==============================================
 // Funciones principales
@@ -38,7 +54,13 @@ function requestUnpair(nodeMac) {
     };
 
     console.log("Enviando solicitud de desemparejamiento:", unpairRequest);
-    client.publish(mqttTopics.unpairRequest, JSON.stringify(unpairRequest), { qos: 1 });
+    client.publish(mqttTopics.unpairRequest, JSON.stringify(unpairRequest), { qos: 2 });
+    
+    // Configurar timeout
+    if (unpairTimeout) clearTimeout(unpairTimeout);
+    unpairTimeout = setTimeout(() => {
+        alert("⚠️ No se recibió confirmación. El dispositivo puede estar offline o procesando la solicitud.");
+    }, 8000);
     
     alert("Solicitud de desemparejamiento enviada. Esperando confirmación...");
 }
@@ -48,50 +70,47 @@ function handleUnpairConfirmation(message) {
     try {
         const data = JSON.parse(message);
         
+        console.log("Confirmación de desemparejamiento recibida:", data);
+        
         if (data.status === "OK" && data.slave_mac) {
-            // Actualizar ambos dispositivos involucrados
-            updateDevice({
-                mac: data.slave_mac,
-                paired_with: '',
-                role: 'UNCONFIGURED'
-            });
+            // Limpiar timeout
+            if (unpairTimeout) {
+                clearTimeout(unpairTimeout);
+                unpairTimeout = null;
+            }
+
+            // Actualizar el dispositivo esclavo
+            if (devices[data.slave_mac]) {
+                devices[data.slave_mac].paired_with = '';
+                devices[data.slave_mac].role = 'UNCONFIGURED';
+                devices[data.slave_mac].status = 'offline';
+            }
             
             // Buscar y actualizar el maestro también
             Object.keys(devices).forEach(mac => {
                 if (devices[mac].paired_with === data.slave_mac) {
-                    updateDevice({
-                        mac: mac,
-                        paired_with: devices[mac].paired_with.replace(data.slave_mac, '')
-                            .replace(/^,|,$/g, '') // Limpiar comas sobrantes
-                            .replace(/,,+/g, ',') // Limpiar comas duplicadas
-                    });
+                    devices[mac].paired_with = '';
+                    if (devices[mac].role === 'MASTER') {
+                        devices[mac].role = 'UNCONFIGURED';
+                    }
                 }
             });
             
-            alert(`Desemparejamiento confirmado para nodo ${data.slave_mac}`);
+            updateTable();
+            alert(`✅ Desemparejamiento exitoso para nodo ${data.slave_mac}`);
         }
     } catch (e) {
         console.error("Error al procesar confirmación de desemparejamiento:", e);
     }
 }
 
-// Función para manejar solicitudes de desemparejamiento (para maestros)
+// Función para manejar solicitudes de desemparejamiento
 function handleUnpairRequest(message) {
     try {
         const data = JSON.parse(message);
         
-        // Verificar si este es el maestro al que se refiere la solicitud
-        const device = devices[data.master_mac];
-        if (device && device.role === 'MASTER' && device.paired_with.includes(data.slave_mac)) {
-            // Enviar confirmación
-            const confirmMsg = {
-                status: "OK",
-                slave_mac: data.slave_mac
-            };
-            
-            client.publish(mqttTopics.unpairConfirm, JSON.stringify(confirmMsg), { qos: 1 });
-            console.log("Confirmación de desemparejamiento enviada para:", data.slave_mac);
-        }
+        console.log("Solicitud de desemparejamiento recibida:", data);
+        
     } catch (e) {
         console.error("Error al procesar solicitud de desemparejamiento:", e);
     }
@@ -125,7 +144,7 @@ function connectToBroker(index) {
         client.subscribe(mqttTopics.nodesStatus, { qos: 1 });
         client.subscribe(mqttTopics.pairingResponse, { qos: 1 });
         client.subscribe(mqttTopics.unpairRequest, { qos: 1 });
-        client.subscribe(mqttTopics.unpairConfirm, { qos: 1 });
+        client.subscribe(mqttTopics.unpairConfirm, { qos: 2 });
         
         // Publicar mensaje de descubrimiento
         client.publish(mqttTopics.discovery, "DISCOVER_NODES", { qos: 1 });
@@ -170,7 +189,7 @@ function connectToBroker(index) {
             const data = JSON.parse(message.toString());
             
             if (topic === mqttTopics.nodesStatus) {
-                // Procesar información de emparejamiento correctamente
+                // Procesar información de estado del nodo
                 const deviceData = {
                     mac: data.mac,
                     role: data.role,
@@ -244,6 +263,7 @@ function switchBroker(index) {
 
 // Actualizar estado de conexión en la UI
 function updateConnectionStatus(status, text) {
+    const statusElement = document.getElementById('connection-status');
     statusElement.className = `status-indicator ${status}`;
     
     let statusHTML = `<i class="fas fa-plug"></i> ${text}`;
@@ -304,6 +324,7 @@ function updateDevice(data) {
 
 // Actualizar tabla de nodos
 function updateTable() {
+    const nodesBody = document.getElementById('nodes-body');
     nodesBody.innerHTML = '';
     
     // Marcar como offline si no hay señal en 2 minutos
@@ -359,23 +380,33 @@ function showConfigModal(nodeMac) {
     currentEditingNode = nodeMac;
     const device = devices[nodeMac];
     
+    const modalTitle = document.getElementById('modal-title');
+    const nodeRoleSelect = document.getElementById('node-role');
+    const pairingGroup = document.getElementById('pairing-group');
+    
     modalTitle.textContent = `Configurar Nodo ${nodeMac}`;
     nodeRoleSelect.value = device.role || 'UNCONFIGURED';
     
     // Actualizar opciones de emparejamiento
     updatePairingOptions();
     
+    const configModal = document.getElementById('config-modal');
     configModal.classList.add('show');
 }
 
 // Ocultar modal
 function hideModal() {
+    const configModal = document.getElementById('config-modal');
     configModal.classList.remove('show');
     currentEditingNode = null;
 }
 
 // Actualizar opciones de emparejamiento
 function updatePairingOptions() {
+    const nodeRoleSelect = document.getElementById('node-role');
+    const pairDeviceSelect = document.getElementById('pair-device');
+    const pairingGroup = document.getElementById('pairing-group');
+    
     const selectedRole = nodeRoleSelect.value;
     pairDeviceSelect.innerHTML = '';
     pairingGroup.style.display = 'none';
@@ -383,13 +414,12 @@ function updatePairingOptions() {
     if (selectedRole === 'SLAVE') {
         pairingGroup.style.display = 'block';
         
-        // Obtener maestros disponibles que no tengan ya este esclavo emparejado
+        // Obtener maestros disponibles
         const availableMasters = Object.entries(devices)
             .filter(([mac, device]) => 
                 device.role === 'MASTER' && 
                 device.status === 'active' &&
-                mac !== currentEditingNode &&
-                !device.paired_with.includes(currentEditingNode)
+                mac !== currentEditingNode
             )
             .map(([mac]) => mac);
         
@@ -419,14 +449,11 @@ function updatePairingOptions() {
 function saveNodeConfig() {
     if (!currentEditingNode) return;
     
+    const nodeRoleSelect = document.getElementById('node-role');
+    const pairDeviceSelect = document.getElementById('pair-device');
+    
     const role = nodeRoleSelect.value;
     const pairWith = role === 'SLAVE' && pairDeviceSelect.value ? pairDeviceSelect.value : '';
-    
-    // Validar que no se empareje con múltiples maestros
-    if (role === 'SLAVE' && pairWith.includes(',')) {
-        alert("Error: Un esclavo solo puede estar emparejado con un maestro");
-        return;
-    }
     
     const config = {
         target: currentEditingNode,
