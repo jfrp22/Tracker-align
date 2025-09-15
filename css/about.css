@@ -161,3 +161,104 @@ MEDIA QUERIES
         font-size: var(--text-base);
     }
 }
+
+@media (max-width: 48em) {
+            .pinout-table, .commands-table {
+                overflow-x: auto;
+                display: block;
+                width: 100%;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .pinout-table table, .commands-table table {
+                min-width: 600px;
+            }
+            
+            .data-structures pre {
+                font-size: var(--text-xs);
+                padding: var(--space-2);
+                overflow-x: auto;
+            }
+            
+            .specs-grid {
+                grid-template-columns: 1fr !important;
+                gap: var(--space-3) !important;
+            }
+            
+            .feature-text pre {
+                font-size: var(--text-xs);
+                padding: var(--space-2);
+            }
+        }
+        
+        @media (max-width: 30em) {
+            .container {
+                padding: var(--space-3);
+            }
+            
+            h1 {
+                font-size: var(--text-xl);
+                flex-direction: column;
+                text-align: center;
+                gap: var(--space-2);
+            }
+            
+            section h2 {
+                font-size: var(--text-lg);
+            }
+            
+            .feature-text h3 {
+                font-size: var(--text-base);
+            }
+            
+            .feature-text h4 {
+                font-size: var(--text-sm);
+            }
+            
+            .feature-text p, 
+            .feature-text li {
+                font-size: var(--text-sm);
+            }
+        }
+        
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-top: var(--space-4);
+        }
+        
+        .spec-item {
+            background: var(--gray-100);
+            padding: var(--space-4);
+            border-radius: var(--radius);
+            text-align: center;
+            transition: all var(--transition-fast) ease;
+        }
+        
+        .spec-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .spec-item h3 {
+            color: var(--primary-600);
+            margin-bottom: var(--space-2);
+            font-size: var(--text-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+        
+        .spec-item p {
+            color: var(--gray-700);
+            font-size: var(--text-sm);
+        }
+        
+        /* Mejora para visualización de código en móviles */
+        .feature-text pre {
+            max-width: 100%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
