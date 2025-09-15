@@ -41,12 +41,10 @@
                         <h3>Hardware</h3>
                         <ul>
                             <li><strong>ESP8266:</strong> Microcontrolador con WiFi integrado (80MHz, 4MB Flash)</li>
-                            <li><strong>Módulo GPS (ej. NEO-6M):</strong> Proporciona datos de ubicación (latitud, longitud, altitud) mediante comunicación serial</li>
-                            <li><strong>Módulo IMU MPU6050:</strong> Proporciona datos de aceleración lineal y velocidad angular (giroscopio y acelerómetro)</li>
-                            <li><strong>Magnetómetro QMC5883L:</strong> Proporciona datos del campo magnético para cálculo del heading (rumbo)</li>
+                            <li><strong>Módulo GPS (ej. NEO-6M):</strong> Proporciona datos de ubicación (latitud, longitud, altitud) mediante comunicación serial (pines D3-RX, D4-TX)</li>
+                            <li><strong>Módulo IMU MPU6050:</strong> Proporciona datos de aceleración lineal y velocidad angular (giroscopio y acelerómetro) vía I2C</li>
+                            <li><strong>Magnetómetro QMC5883L:</strong> Proporciona datos del campo magnético para cálculo del heading (rumbo) vía I2C</li>
                             <li><strong>Servomotores de 360° (x2):</strong> Control de azimut (D7) y elevación (D6) para sistemas de apuntamiento</li>
-                            <li><strong>Interfaz Serial:</strong> Comunicación con el GPS mediante pines D3 (RX) y D4 (TX)</li>
-                            <li><strong>Interfaz I2C:</strong> Comunicación con el MPU6050 y QMC5883L mediante pines D1 (SCL) y D2 (SDA)</li>
                             <li><strong>Botón físico (D5):</strong> Para reset de configuración (3 segundos) o reset de fábrica (8 segundos)</li>
                             <li><strong>LED de estado (D8):</strong> Indicador visual del estado del sistema</li>
                         </ul>
@@ -64,18 +62,20 @@
                             <li><strong>WiFi:</strong> Conexión a redes locales o modo AP (punto de acceso: IoTNode-AP/config1234)</li>
                             <li><strong>MQTT:</strong> Comunicación con brokers públicos (Mosquitto, HiveMQ, EMQX) para mensajería lightweight</li>
                             <li><strong>mDNS:</strong> Resolución de nombres en red local (hostname: antenna)</li>
-                            <li><strong>HTTP:</strong> Servidor web con autenticación (admin/iotlab123)</li>
+                            <li><strong>HTTP/Webserver Async:</strong> Servidor web asíncrono con autenticación (admin/iotlab123)</li>
+                            <li><strong>OTA:</strong> Actualizaciones Over-The-Air con autenticación</li>
                         </ul>
                         <h4>Librerías:</h4>
                         <ul>
                             <li><strong>TinyGPS++</strong> (procesamiento GPS)</li>
                             <li><strong>PubSubClient</strong> (MQTT)</li>
-                            <li><strong>ESPAsyncWebServer</strong> (servidor web asíncrono)</li>
+                            <li><strong>ESPAsyncWebServer/ESPAsyncTCP</strong> (servidor web asíncrono)</li>
                             <li><strong>ArduinoOTA</strong> (actualizaciones inalámbricas)</li>
                             <li><strong>MPU6050</strong> (gestión del sensor IMU)</li>
                             <li><strong>Servo</strong> (control de servomotores)</li>
                             <li><strong>ArduinoJson</strong> (manejo de datos JSON)</li>
                             <li><strong>Ticker</strong> (temporizadores no bloqueantes)</li>
+                            <li><strong>SoftwareSerial</strong> (comunicación serial con GPS)</li>
                         </ul>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
                         </ul>
                         <h4>Interfaz Web:</h4>
                         <ul>
-                            <li>Dashboard con autenticación (admin/iotlab123)</li>
+                            <li>Dashboard con autenticación (admin/iotlab123, configurables)</li>
                             <li>Páginas para:
                                 <ul>
                                     <li>Configurar WiFi (SSID/contraseña)</li>
@@ -107,7 +107,8 @@
                                     <li>Calibración de brújula y heading</li>
                                     <li>Configuración de coordenadas manuales/GPS</li>
                                     <li>Configuración de objetivo de apuntamiento</li>
-                                    <li>Reinicio de fábrica (borra EEPROM)</li>
+                                    <li>Gestión de credenciales de acceso web</li>
+                                    <li>Reinicio de fábrica (borra EEPROM completa)</li>
                                 </ul>
                             </li>
                         </ul>
@@ -120,7 +121,7 @@
                     </div>
                     <div class="feature-text">
                         <h3>Comunicación MQTT</h3>
-                        <h4>Brokers Soportados:</h4>
+                        <h4>Brokers Soportados (con rotación automática):</h4>
                         <pre>const char* mqtt_servers[] = {
   "test.mosquitto.org", 
   "broker.hivemq.com", 
@@ -128,8 +129,8 @@
 };</pre>
                         <h4>Tópicos Clave:</h4>
                         <ul>
-                            <li><strong>iotlab/nodes/status:</strong> Publica estado del nodo (IP, RSSI, rol)</li>
-                            <li><strong>iotlab/gps/data:</strong> Envía coordenadas GPS</li>
+                            <li><strong>iotlab/nodes/status:</strong> Publica estado del nodo (IP, RSSI, rol, emparejamiento)</li>
+                            <li><strong>iotlab/gps/data:</strong> Envía coordenadas GPS con filtrado de mediana</li>
                             <li><strong>iotlab/sensor/data:</strong> Datos de IMU, heading y estado de servos</li>
                             <li><strong>iotlab/servo/control:</strong> Control remoto de servomotores</li>
                             <li><strong>iotlab/nodes/config:</strong> Recibe comandos para cambiar rol o emparejar</li>
@@ -138,6 +139,7 @@
                             <li><strong>iotlab/pairing/unpair_request:</strong> Solicitudes de desemparejamiento</li>
                             <li><strong>iotlab/pairing/unpair_confirm:</strong> Confirmaciones de desemparejamiento</li>
                             <li><strong>iotlab/master/{MAC}/broadcast:</strong> Comunicación maestro-esclavo</li>
+                            <li><strong>iotlab/master/{MAC}/request:</strong> Solicitudes de esclavos a maestros</li>
                             <li><strong>iotlab/nodes/{MAC}/distance:</strong> Publicación de distancias entre nodos</li>
                         </ul>
                     </div>
@@ -152,23 +154,24 @@
                         <ul>
                             <li><strong>MASTER:</strong>
                                 <ul>
-                                    <li>Gestiona esclavos (lista en pairedDevice)</li>
-                                    <li>Envía broadcasts a esclavos mediante iotlab/master/{MAC}/broadcast</li>
-                                    <li>Recibe solicitudes de emparejamiento</li>
+                                    <li>Gestiona múltiples esclavos (lista separada por comas en pairedDevice)</li>
+                                    <li>Envía broadcasts periódicos a esclavos con sus coordenadas</li>
+                                    <li>Recibe y responde solicitudes de emparejamiento</li>
                                     <li>Gestiona solicitudes de desemparejamiento</li>
-                                    <li>Puede tener múltiples esclavos emparejados</li>
+                                    <li>Puede tener múltiples esclavos emparejados simultáneamente</li>
                                 </ul>
                             </li>
                             <li><strong>SLAVE:</strong>
                                 <ul>
-                                    <li>Se suscribe al tópico de su maestro</li>
-                                    <li>Responde a comandos remotos</li>
+                                    <li>Se suscribe al tópico de broadcast de su maestro</li>
+                                    <li>Responde a comandos remotos y actualizaciones de coordenadas</li>
                                     <li>Calcula y publica distancia al maestro</li>
-                                    <li>Solo puede estar emparejado con un maestro</li>
-                                    <li>Puede solicitar desemparejamiento</li>
+                                    <li>Solo puede estar emparejado con un maestro a la vez</li>
+                                    <li>Puede solicitar desemparejamiento mediante MQTT</li>
+                                    <li>Soporta modo de alineamiento automático con el maestro</li>
                                 </ul>
                             </li>
-                            <li><strong>UNCONFIGURED:</strong> Esperando configuración inicial</li>
+                            <li><strong>UNCONFIGURED:</strong> Esperando configuración inicial (rol y emparejamiento)</li>
                         </ul>
                     </div>
                 </div>
@@ -179,12 +182,13 @@
                     </div>
                     <div class="feature-text">
                         <h3>Geolocalización y Orientación</h3>
-                        <h4>Procesamiento GPS:</h4>
+                        <h4>Procesamiento GPS Avanzado:</h4>
                         <ul>
                             <li>Lectura continua de datos NMEA con TinyGPS++</li>
-                            <li>Filtro de mediana para suavizado de datos (5 muestras)</li>
-                            <li>Modo coordenadas manuales como alternativa al GPS</li>
-                            <li>Publicación periódica (cada 5s) de:
+                            <li>Filtro de mediana de 5 muestras para suavizado de datos de posición</li>
+                            <li>Validación de datos GPS con timeout de 2 segundos</li>
+                            <li>Publicación periódica (cada 5s) de datos GPS cuando están disponibles</li>
+                            <li>Estructura de datos GPS publicada:
                                 <pre>{
   "mac": "ABC123",
   "lat": 12.345678,
@@ -196,17 +200,18 @@
                             </li>
                         </ul>
                         
-                        <h4>Orientación y Apuntamiento:</h4>
+                        <h4>Orientación y Apuntamiento Avanzado:</h4>
                         <ul>
-                            <li>Cálculo de pitch, roll y yaw a partir del MPU6050</li>
-                            <li>Determinación del heading (rumbo) mediante magnetómetro QMC5883L</li>
-                            <li>Sistema de calibración de heading inicial</li>
-                            <li>Offset de heading configurable para corrección</li>
-                            <li>Límites de movimiento para azimut (±45°) y elevación (70°-125°)</li>
-                            <li>Control de servos con verificación de límites en tiempo real</li>
-                            <li>Apuntamiento automático a coordenadas objetivo</li>
-                            <li>Cálculo de bearing y distancia a objetivo</li>
-                            <li>Control de elevación basado en distancia al objetivo</li>
+                            <li>Cálculo de pitch, roll a partir del MPU6050 (fusión acelerómetro/giroscopio)</li>
+                            <li>Determinación del heading (rumbo) mediante magnetómetro QMC5883L con corrección de declinación magnética (-12°)</li>
+                            <li>Sistema de calibración de heading inicial (promedio de 10 lecturas)</li>
+                            <li>Offset de heading configurable para corrección manual</li>
+                            <li>Límites de movimiento para azimut (±45°) y elevación (70°-125°) con márgenes de seguridad</li>
+                            <li>Control de servos con verificación de límites en tiempo real (cada 50ms)</li>
+                            <li>Apuntamiento automático a coordenadas objetivo (hasTarget)</li>
+                            <li>Cálculo preciso de bearing y distancia a objetivo (fórmula Haversine)</li>
+                            <li>Control de elevación basado en distancia al objetivo con ángulos óptimos configurables</li>
+                            <li>Interfaz web en tiempo real con visualización de datos de sensores y estado de servos</li>
                         </ul>
                     </div>
                 </div>
@@ -218,11 +223,12 @@
                     <div class="feature-text">
                         <h3>Actualizaciones OTA (Over-The-Air)</h3>
                         <ul>
-                            <li>Actualización inalámbrica del firmware</li>
-                            <li>Autenticación con contraseña (admin)</li>
+                            <li>Actualización inalámbrica del firmware mediante ArduinoOTA</li>
+                            <li>Autenticación con contraseña (admin por defecto)</li>
                             <li>Indicación visual mediante LED durante el proceso</li>
                             <li>Reinicio automático tras actualización exitosa</li>
                             <li>Hostname personalizado (antenna-{MAC})</li>
+                            <li>Manejo de errores con callbacks para diferentes tipos de fallos</li>
                         </ul>
                     </div>
                 </div>
@@ -236,77 +242,254 @@
                         <ul>
                             <li><strong>EEPROM (512 bytes):</strong>
                                 <ul>
-                                    <li>Almacena configuración crítica (WiFi, rol, emparejamiento)</li>
+                                    <li>Almacena configuración crítica (WiFi, rol, emparejamiento, credenciales web)</li>
                                     <li>Guarda heading inicial y offset de calibración</li>
                                     <li>Soporta reinicios sin pérdida de datos</li>
-                                    <li>Verificación de borrado en reset de fábrica</li>
+                                    <li>Verificación de borrado completo en reset de fábrica</li>
+                                    <li>Estructura de datos definida:
+                                        <pre>struct {
+  char wifiSSID[32];
+  char wifiPass[32];
+  char nodeRole[16];
+  char pairedDevice[64];
+  float headingInicial;
+  float headingOffset;
+  char httpUser[16];
+  char httpPass[16];
+} eepromConfig;</pre>
+                                    </li>
                                 </ul>
                             </li>
                             <li><strong>Mecanismos de Recuperación:</strong>
                                 <ul>
-                                    <li>Reintentos de conexión WiFi/MQTT con rotación de brokers</li>
-                                    <li>Temporizadores (Ticker) para evitar bloqueos</li>
-                                    <li>Reset por hardware (botón físico)</li>
+                                    <li>Reintentos de conexión WiFi/MQTT con rotación automática de brokers</li>
+                                    <li>Temporizadores no bloqueantes (Ticker) para todas las tareas periódicas</li>
+                                    <li>Reset por hardware (botón físico con detección debounced)</li>
                                     <li>Reset de configuración (3 segundos) y de fábrica (8 segundos)</li>
-                                    <li>Verificación de borrado de EEPROM en reset de fábrica</li>
+                                    <li>Verificación de borrado completo de EEPROM en reset de fábrica</li>
+                                    <li>Sistema de reintentos para conexión MQTT con contador de intentos</li>
                                 </ul>
                             </li>
                             <li><strong>Protección de Hardware:</strong>
                                 <ul>
                                     <li>Límites software para evitar daños mecánicos en servos</li>
-                                    <li>Detención de emergencia de servos</li>
+                                    <li>Detención de emergencia de servos (detenerServosEmergency)</li>
                                     <li>Sistema de histéresis para evitar oscilaciones en límites</li>
                                     <li>Verificación de límites en tiempo real para ambos servos</li>
+                                    <li>Comprobación de permisos de movimiento antes de ejecutar comandos</li>
+                                    <li>Márgenes de seguridad para evitar alcanzar límites físicos</li>
                                 </ul>
                             </li>
                         </ul>
                     </div>
                 </div>
-            </section>
 
-            <section class="data-flow">
-                <h2><i class="fas fa-exchange-alt"></i> Flujo de Datos</h2>
                 <div class="feature">
                     <div class="feature-icon">
-                        <i class="fas fa-play"></i>
+                        <i class="fas fa-robot"></i>
                     </div>
                     <div class="feature-text">
-                        <ol>
-                            <li><strong>Inicio:</strong>
+                        <h3>Alineamiento Automático</h3>
+                        <ul>
+                            <li><strong>Activación/Desactivación:</strong> Mediante interfaz web o comandos MQTT</li>
+                            <li><strong>Funcionamiento para esclavos:</strong>
                                 <ul>
-                                    <li>Carga configuración desde EEPROM</li>
-                                    <li>Conecta a WiFi o inicia modo AP</li>
-                                    <li>Inicializa sensores (MPU6050, QMC5883L) y servos</li>
-                                    <li>Inicia servidor web y configura OTA</li>
-                                    <li>Conecta a broker MQTT y publica estado</li>
-                                    <li>Suscribe a tópicos según el rol del nodo</li>
+                                    <li>Recibe coordenadas del maestro mediante MQTT</li>
+                                    <li>Calcula bearing y distancia hacia el maestro</li>
+                                    <li>Ajusta azimut y elevación automáticamente</li>
+                                    <li>Publica distancia calculada en tópico específico</li>
                                 </ul>
                             </li>
-                            <li><strong>Operación Normal:</strong>
+                            <li><strong>Funcionamiento para maestros:</strong>
                                 <ul>
-                                    <li>Lectura continua de GPS y procesamiento con filtro de mediana</li>
-                                    <li>Lectura de sensores IMU y cálculo de orientación</li>
-                                    <li>Publicación periódica de datos (estado, GPS, sensores)</li>
-                                    <li>Escucha mensajes MQTT (configuración/comandos)</li>
-                                    <li>Verificación de límites de servos en tiempo real</li>
-                                    <li>Manejo de emparejamiento maestro-esclavo</li>
-                                    <li>Gestión de desemparejamientos</li>
-                                    <li>Apuntamiento automático a coordenadas objetivo</li>
-                                    <li>Cálculo de bearing y distancia a objetivo</li>
-                                    <li>Control de elevación basado en distancia al objetivo</li>
+                                    <li>Envía coordenadas a esclavos periódicamente</li>
+                                    <li>Puede recibir solicitudes de alineamiento de esclavos</li>
                                 </ul>
                             </li>
-                            <li><strong>Comandos:</strong>
-                                <ul>
-                                    <li>Cambio de rol o emparejamiento mediante MQTT/web</li>
-                                    <li>Control manual de servos (web/MQTT)</li>
-                                    <li>Configuración de objetivo de apuntamiento</li>
-                                    <li>Calibración de heading</li>
-                                    <li>Reinicio de fábrica</li>
-                                </ul>
-                            </li>
-                        </ol>
+                            <li><strong>Actualización en tiempo real:</strong> Cada 2 segundos o cuando cambian las coordenadas</li>
+                        </ul>
                     </div>
+                </div>
+            </section>
+
+            <section class="pinout">
+                <h2><i class="fas fa-microchip"></i> Pinout y Conectividad</h2>
+                <div class="pinout-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pin ESP8266</th>
+                                <th>Función</th>
+                                <th>Componente</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>D0</td>
+                                <td>GPIO16</td>
+                                <td>LED de estado</td>
+                                <td>Salida, control visual del estado</td>
+                            </tr>
+                            <tr>
+                                <td>D1</td>
+                                <td>GPIO5 (SCL)</td>
+                                <td>I2C</td>
+                                <td>Reloj I2C para IMU y magnetómetro</td>
+                            </tr>
+                            <tr>
+                                <td>D2</td>
+                                <td>GPIO4 (SDA)</td>
+                                <td>I2C</td>
+                                <td>Datos I2C para IMU y magnetómetro</td>
+                            </tr>
+                            <tr>
+                                <td>D3</td>
+                                <td>GPIO0 (RX)</td>
+                                <td>GPS</td>
+                                <td>Recepción de datos GPS (SoftwareSerial)</td>
+                            </tr>
+                            <tr>
+                                <td>D4</td>
+                                <td>GPIO2 (TX)</td>
+                                <td>GPS</td>
+                                <td>Transmisión al GPS (SoftwareSerial)</td>
+                            </tr>
+                            <tr>
+                                <td>D5</td>
+                                <td>GPIO14</td>
+                                <td>Botón físico</td>
+                                <td>Entrada, reset de configuración/fábrica</td>
+                            </tr>
+                            <tr>
+                                <td>D6</td>
+                                <td>GPIO12</td>
+                                <td>Servo Elevación</td>
+                                <td>Salida PWM, control de elevación (70°-125°)</td>
+                            </tr>
+                            <tr>
+                                <td>D7</td>
+                                <td>GPIO13</td>
+                                <td>Servo Azimut</td>
+                                <td>Salida PWM, control de azimut (±45°)</td>
+                            </tr>
+                            <tr>
+                                <td>D8</td>
+                                <td>GPIO15</td>
+                                <td>LED de estado</td>
+                                <td>Salida, indicador visual adicional</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="commands">
+                <h2><i class="fas fa-terminal"></i> Comandos y Estructuras</h2>
+                
+                <h3>Comandos MQTT</h3>
+                <div class="commands-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Comando</th>
+                                <th>Tópico</th>
+                                <th>Payload (JSON)</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Control de Servos</td>
+                                <td>iotlab/servo/control</td>
+                                <td><pre>{
+  "mac": "ABC123",
+  "azimuth": 45.0,
+  "elevation": 90.0
+}</pre></td>
+                                <td>Control remoto de posición de servos</td>
+                            </tr>
+                            <tr>
+                                <td>Configuración de Rol</td>
+                                <td>iotlab/nodes/config</td>
+                                <td><pre>{
+  "mac": "ABC123",
+  "role": "MASTER"
+}</pre></td>
+                                <td>Cambiar rol del nodo (MASTER/SLAVE)</td>
+                            </tr>
+                            <tr>
+                                <td>Solicitud de Emparejamiento</td>
+                                <td>iotlab/pairing/request</td>
+                                <td><pre>{
+  "masterMac": "MASTER_MAC",
+  "slaveMac": "SLAVE_MAC"
+}</pre></td>
+                                <td>Solicitud de emparejamiento entre nodos</td>
+                            </tr>
+                            <tr>
+                                <td>Respuesta de Emparejamiento</td>
+                                <td>iotlab/pairing/response</td>
+                                <td><pre>{
+  "masterMac": "MASTER_MAC",
+  "slaveMac": "SLAVE_MAC",
+  "status": "accepted"
+}</pre></td>
+                                <td>Respuesta a solicitud de emparejamiento</td>
+                            </tr>
+                            <tr>
+                                <td>Solicitud de Desemparejamiento</td>
+                                <td>iotlab/pairing/unpair_request</td>
+                                <td><pre>{
+  "masterMac": "MASTER_MAC",
+  "slaveMac": "SLAVE_MAC"
+}</pre></td>
+                                <td>Solicitud para deshacer emparejamiento</td>
+                            </tr>
+                            <tr>
+                                <td>Confirmación de Desemparejamiento</td>
+                                <td>iotlab/pairing/unpair_confirm</td>
+                                <td><pre>{
+  "masterMac": "MASTER_MAC",
+  "slaveMac": "SLAVE_MAC"
+}</pre></td>
+                                <td>Confirmación de desemparejamiento</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Estructuras de Datos</h3>
+                <div class="data-structures">
+                    <h4>Datos GPS</h4>
+                    <pre>struct GpsData {
+  float latitude;
+  float longitude;
+  float altitude;
+  int satellites;
+  unsigned long age;
+  bool valid;
+};</pre>
+                    
+                    <h4>Datos de Orientación</h4>
+                    <pre>struct OrientationData {
+  float pitch;
+  float roll;
+  float heading;
+  float headingCorrected;
+};</pre>
+                    
+                    <h4>Estado del Sistema</h4>
+                    <pre>struct SystemStatus {
+  String macAddress;
+  String ipAddress;
+  String nodeRole;
+  String pairedDevice;
+  int wifiRSSI;
+  bool hasGpsFix;
+  bool isPaired;
+  bool autoAlignment;
+};</pre>
                 </div>
             </section>
 
