@@ -6,7 +6,7 @@ let client = null;
 let brokerSwitchTimeout = null;
 let autoReconnectEnabled = true;
 
-// Configuración de brokers MQTT
+// Configuración de brokers MQTT (solo una declaración)
 const availableBrokers = [
     { name: "Mosquitto Test", url: "wss://test.mosquitto.org:8081" },
     { name: "HiveMQ", url: "wss://broker.hivemq.com:8884/mqtt" },
@@ -59,7 +59,7 @@ function requestUnpair(nodeMac) {
     client.publish(mqttTopics.unpairRequest, JSON.stringify(unpairRequest), { qos: 1 });
     
     // Mostrar mensaje de confirmación
-    alert("Solicitud de desemparejamiento enviada. El proceso se completará en unos segundos.");
+    showNotification("Solicitud de desemparejamiento enviada", 'info');
 }
 
 // Función para manejar confirmaciones de desemparejamiento
