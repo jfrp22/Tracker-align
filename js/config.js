@@ -342,11 +342,6 @@ function updateTable() {
                 <button class="btn btn-primary btn-sm" onclick="showConfigModal('${mac}')">
                     <i class="fas fa-cog"></i> Configurar
                 </button>
-                ${device.paired_with ? `
-                <button class="btn btn-danger btn-sm" onclick="requestUnpair('${mac}')" style="margin-left: 5px;">
-                    <i class="fas fa-unlink"></i> Desemparejar
-                </button>
-                ` : ''}
             </td>
         `;
         
