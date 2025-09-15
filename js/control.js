@@ -318,5 +318,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-    }, 10000); // Verificar cada 10 segundos
+    }, 1000); // Verificar cada 10 segundos
 });
