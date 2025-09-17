@@ -363,3 +363,71 @@ CORRECCIÓN PARA DISPOSITIVOS MÓVILES
         gap: var(--space-1);
     }
 }
+
+.custom-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.device-marker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.device-marker::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.device-marker i {
+    transform: rotate(45deg);
+    color: white;
+    font-size: 12px;
+    z-index: 1;
+    position: relative;
+}
+
+/* Efecto hover para los marcadores */
+.device-marker:hover {
+    transform: rotate(-45deg) scale(1.2);
+    z-index: 1000;
+}
+
+/* Estilo para el popup mejorado */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+    margin: 15px;
+    line-height: 1.5;
+    font-family: var(--font-sans);
+}
+
+.leaflet-popup-content h4 {
+    margin: 0 0 10px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.leaflet-popup-content p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
