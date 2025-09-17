@@ -232,15 +232,15 @@ function updateDeviceMarker(mac, data) {
     const now = new Date();
     
     if (!devices[mac]) {
-        // Crear nuevo marcador con icono personalizado
         const icon = L.divIcon({
-            className: 'custom-icon',
-            html: `<div class="device-marker" style="background-color: ${getColorForMac(mac)}">
-                     <i class="fas fa-map-marker-alt"></i>
-                   </div>`,
-            iconSize: [30, 30],
-            iconAnchor: [15, 30]
-        });
+    className: 'custom-icon',
+    html: `<div class="device-marker" style="background-color: ${getColorForMac(mac)}">
+             <i class="fas fa-map-marker-alt"></i>
+           </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -30]
+});
         
         const marker = L.marker([data.lat, data.lng], {
             title: `Dispositivo: ${mac}`,
