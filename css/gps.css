@@ -364,14 +364,16 @@ CORRECCIÓN PARA DISPOSITIVOS MÓVILES
     }
 }
 
+
+/* Estilos mejorados para los marcadores */
 .custom-icon {
     background: transparent !important;
     border: none !important;
 }
 
 .device-marker {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     display: flex;
@@ -380,6 +382,7 @@ CORRECCIÓN PARA DISPOSITIVOS MÓVILES
     position: relative;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    border: 2px solid white;
 }
 
 .device-marker::after {
@@ -430,4 +433,35 @@ CORRECCIÓN PARA DISPOSITIVOS MÓVILES
 .leaflet-popup-content p {
     margin: 5px 0;
     font-size: 0.9rem;
+}
+
+/* BOTÓN PARA MOSTRAR TODOS LOS DISPOSITIVOS */
+#show-all-btn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: all var(--transition-fast) ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background-color: var(--primary-500);
+    color: var(--white);
+    margin-left: auto;
+}
+
+#show-all-btn:hover {
+    background-color: var(--primary-600);
+    transform: translateY(-1px);
+}
+
+.controls-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+    gap: var(--space-3);
 }
