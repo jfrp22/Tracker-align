@@ -232,14 +232,15 @@ function updateDeviceMarker(mac, data) {
     const now = new Date();
     
     if (!devices[mac]) {
-        const icon = L.divIcon({
+        // Crear nuevo marcador con icono personalizado
+const icon = L.divIcon({
     className: 'custom-icon',
     html: `<div class="device-marker" style="background-color: ${getColorForMac(mac)}">
              <i class="fas fa-map-marker-alt"></i>
            </div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30]
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
 });
         
         const marker = L.marker([data.lat, data.lng], {
@@ -323,6 +324,30 @@ function getColorForMac(mac) {
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
+        document.getElementById('show-all-btn').addEventListener('click', showAllDevices);
+
     // Conectar al primer broker al cargar la página
     connectToBroker(0);
 });
+
+function showAllDevices() {
+    const deviceMarkers = Object.values(devices).map(device => device.marker);
+    
+    if (deviceMarkers.length === 0) {
+        return; // No hay dispositivos para mostrar
+    }
+    
+    // Crear un grupo con todos los marcadores
+    const group = new L.featureGroup(deviceMarkers);
+    
+    // Ajustar el mapa para mostrar todos los marcadores
+    map.fitBounds(group.getBounds().pad(0.1));
+    
+    // Restablecer el estado activo de los botones
+    document.querySelectorAll('.device-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    activeDevice = null;
+    userInteractedWithMap = false;
+}
