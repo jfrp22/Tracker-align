@@ -206,7 +206,7 @@
                             <li>Determinación del heading (rumbo) mediante magnetómetro QMC5883L con corrección de declinación magnética (-12°)</li>
                             <li>Sistema de calibración de heading inicial (promedio de 10 lecturas)</li>
                             <li>Offset de heading configurable para corrección manual</li>
-                            <li>Límites de movimiento para azimut (±45°) y elevación (70°-125°) con márgenes de seguridad</li>
+                            <li>Límites de movimiento para azimut (±55°) y elevación (65°-115°) con márgenes de seguridad</li>
                             <li>Control de servos con verificación de límites en tiempo real (cada 50ms)</li>
                             <li>Apuntamiento automático a coordenadas objetivo (hasTarget)</li>
                             <li>Cálculo preciso de bearing y distancia a objetivo (fórmula Haversine)</li>
@@ -326,24 +326,6 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>D0</td>
-                                <td>GPIO16</td>
-                                <td>LED de estado</td>
-                                <td>Salida, control visual del estado</td>
-                            </tr>
-                            <tr>
-                                <td>D1</td>
-                                <td>GPIO5 (SCL)</td>
-                                <td>I2C</td>
-                                <td>Reloj I2C para IMU y magnetómetro</td>
-                            </tr>
-                            <tr>
-                                <td>D2</td>
-                                <td>GPIO4 (SDA)</td>
-                                <td>I2C</td>
-                                <td>Datos I2C para IMU y magnetómetro</td>
-                            </tr>
-                            <tr>
                                 <td>D3</td>
                                 <td>GPIO0 (RX)</td>
                                 <td>GPS</td>
@@ -365,19 +347,31 @@
                                 <td>D6</td>
                                 <td>GPIO12</td>
                                 <td>Servo Elevación</td>
-                                <td>Salida PWM, control de elevación (70°-125°)</td>
+                                <td>Salida PWM, control de elevación (65°-115°)</td>
                             </tr>
                             <tr>
                                 <td>D7</td>
                                 <td>GPIO13</td>
                                 <td>Servo Azimut</td>
-                                <td>Salida PWM, control de azimut (±45°)</td>
+                                <td>Salida PWM, control de azimut (±55°)</td>
                             </tr>
                             <tr>
                                 <td>D8</td>
                                 <td>GPIO15</td>
                                 <td>LED de estado</td>
-                                <td>Salida, indicador visual adicional</td>
+                                <td>Salida, indicador visual del estado del sistema</td>
+                            </tr>
+                            <tr>
+                                <td>D1</td>
+                                <td>GPIO5 (SCL)</td>
+                                <td>I2C</td>
+                                <td>Reloj I2C para IMU y magnetómetro</td>
+                            </tr>
+                            <tr>
+                                <td>D2</td>
+                                <td>GPIO4 (SDA)</td>
+                                <td>I2C</td>
+                                <td>Datos I2C para IMU y magnetómetro</td>
                             </tr>
                         </tbody>
                     </table>
@@ -403,27 +397,29 @@
                                 <td>Control de Servos</td>
                                 <td>iotlab/servo/control</td>
                                 <td><pre>{
-  "mac": "ABC123",
-  "azimuth": 45.0,
-  "elevation": 90.0
+  "target": "ABC123",
+  "command": "servo_control",
+  "servo": "A",
+  "action": "left"
 }</pre></td>
-                                <td>Control remoto de posición de servos</td>
+                                <td>Control remoto de servos (left, right, up, down, stop)</td>
                             </tr>
                             <tr>
                                 <td>Configuración de Rol</td>
                                 <td>iotlab/nodes/config</td>
                                 <td><pre>{
-  "mac": "ABC123",
-  "role": "MASTER"
+  "target": "ABC123",
+  "role": "MASTER",
+  "pair_with": ""
 }</pre></td>
-                                <td>Cambiar rol del nodo (MASTER/SLAVE)</td>
+                                <td>Cambiar rol del nodo (MASTER/SLAVE/UNCONFIGURED)</td>
                             </tr>
                             <tr>
                                 <td>Solicitud de Emparejamiento</td>
                                 <td>iotlab/pairing/request</td>
                                 <td><pre>{
-  "masterMac": "MASTER_MAC",
-  "slaveMac": "SLAVE_MAC"
+  "master_mac": "MASTER_MAC",
+  "slave_mac": "SLAVE_MAC"
 }</pre></td>
                                 <td>Solicitud de emparejamiento entre nodos</td>
                             </tr>
@@ -431,9 +427,9 @@
                                 <td>Respuesta de Emparejamiento</td>
                                 <td>iotlab/pairing/response</td>
                                 <td><pre>{
-  "masterMac": "MASTER_MAC",
-  "slaveMac": "SLAVE_MAC",
-  "status": "accepted"
+  "master_mac": "MASTER_MAC",
+  "slave_mac": "SLAVE_MAC",
+  "status": "PAIRED"
 }</pre></td>
                                 <td>Respuesta a solicitud de emparejamiento</td>
                             </tr>
@@ -441,8 +437,8 @@
                                 <td>Solicitud de Desemparejamiento</td>
                                 <td>iotlab/pairing/unpair_request</td>
                                 <td><pre>{
-  "masterMac": "MASTER_MAC",
-  "slaveMac": "SLAVE_MAC"
+  "master_mac": "MASTER_MAC",
+  "slave_mac": "SLAVE_MAC"
 }</pre></td>
                                 <td>Solicitud para deshacer emparejamiento</td>
                             </tr>
@@ -450,8 +446,8 @@
                                 <td>Confirmación de Desemparejamiento</td>
                                 <td>iotlab/pairing/unpair_confirm</td>
                                 <td><pre>{
-  "masterMac": "MASTER_MAC",
-  "slaveMac": "SLAVE_MAC"
+  "status": "OK",
+  "slave_mac": "SLAVE_MAC"
 }</pre></td>
                                 <td>Confirmación de desemparejamiento</td>
                             </tr>
@@ -475,25 +471,29 @@
                     <pre>struct OrientationData {
   float pitch;
   float roll;
+  float yaw;
   float heading;
   float headingCorrected;
+  float x_gauss;
+  float y_gauss;
+  float z_gauss;
 };</pre>
                     
                     <h4>Estado del Sistema</h4>
                     <pre>struct SystemStatus {
-  String macAddress;
-  String ipAddress;
+  String nodeID;
   String nodeRole;
   String pairedDevice;
-  int wifiRSSI;
-  bool hasGpsFix;
-  bool isPaired;
-  bool autoAlignment;
+  bool hasTarget;
+  bool autoAlignmentActive;
+  bool commsActive;
+  int servoA_dir;
+  int servoB_dir;
 };</pre>
                 </div>
             </section>
 
-                        <section class="technical-specs">
+            <section class="technical-specs">
                 <h2><i class="fas fa-tools"></i> Especificaciones Técnicas</h2>
                 <div class="specs-grid">
                     <div class="spec-item">
@@ -531,6 +531,6 @@
                 </div>
             </section>
         </div>
-    <script src="js/auth-protect.js"></script>
+    </div>
 </body>
 </html>
